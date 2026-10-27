@@ -311,7 +311,7 @@ if (!S.materias.some(m => sinTildes(m.nombre).includes('fisicoquimica'))) { S.ma
 let timerSync;
 const guardarTodo = () => {
   escribir(KEY, S);
-  if (fam.codigo && !esMama()) { clearTimeout(timerSync); timerSync = setTimeout(sincronizar, 2500); }
+  if (fam.codigo && esChica()) { clearTimeout(timerSync); timerSync = setTimeout(sincronizar, 2500); }
 };
 async function sincronizar() {
   try {
@@ -323,17 +323,25 @@ async function sincronizar() {
   } catch (e) {}
 }
 
-/* familia: el link de conexión trae #familia=CODIGO&quien=mama|chica */
+/* familia: el link de conexión trae #m=CODIGO (mamá) o #v=CODIGO (Valentina); también acepta el formato viejo
+   #familia=CODIGO&quien=mama|chica. Si el link llega cortado y no dice quién es, la app lo pregunta. */
+function leerLink(hash) {
+  const h = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+  const codigo = h.get('m') || h.get('v') || h.get('familia');
+  if (!codigo || codigo.length < 16) return null;
+  const quien = h.get('m') ? 'mama' : h.get('v') ? 'chica' : ['mama', 'chica'].includes(h.get('quien')) ? h.get('quien') : null;
+  return { codigo, quien };
+}
 let fam = leer(KEY_FAMILIA, {});
 (() => {
-  const h = new URLSearchParams(location.hash.slice(1));
-  if (h.get('familia')) {
-    fam = { codigo: h.get('familia'), quien: h.get('quien') === 'mama' ? 'mama' : 'chica' };
-    escribir(KEY_FAMILIA, fam);
-    history.replaceState(null, '', location.pathname + location.search);
-  }
+  const nuevo = leerLink(location.hash);
+  if (!nuevo) return;
+  fam = nuevo;
+  escribir(KEY_FAMILIA, fam);
+  history.replaceState(null, '', location.pathname + location.search);
 })();
 const esMama = () => fam.quien === 'mama';
+const esChica = () => fam.quien === 'chica';
 const yo = () => esMama() ? 'mama' : 'chica';
 
 async function api(accion, datos = {}) {
@@ -905,14 +913,14 @@ function tarjetaAvisos() {
 
 /* ---------- conectar pegando el link ---------- */
 function conectarCon(texto) {
-  let h;
-  try { h = new URLSearchParams(new URL(String(texto).trim()).hash.slice(1)); } catch (e) { h = null; }
-  if (!h || !h.get('familia')) { avisar('Ese no es el link de conexión. Copialo entero del WhatsApp.'); return; }
-  escribir(KEY_FAMILIA, { codigo: h.get('familia'), quien: h.get('quien') === 'mama' ? 'mama' : 'chica' });
+  const t = String(texto).trim();
+  const nuevo = leerLink(t.includes('#') ? t.slice(t.indexOf('#')) : '');
+  if (!nuevo) { avisar('Ese no es el link de conexión. Copialo entero del WhatsApp.'); return; }
+  escribir(KEY_FAMILIA, nuevo);
   location.reload();
 }
 const tarjetaConectar = () => fam.codigo ? '' : `<div class="tarjeta"><h2>🔗 Conectar con mamá y Dino</h2><p class="sub" style="margin:0 0 8px">Pegá acá el link que te mandaron por WhatsApp. Se hace una sola vez.</p>
-  <div class="botones"><input id="link-conexion" class="precio-in" style="flex:1;text-align:left;width:auto;min-width:0" placeholder="https://…#familia=…"><button class="btn primario chico" data-act="conectar">Conectar</button></div></div>`;
+  <div class="botones"><input id="link-conexion" class="precio-in" style="flex:1;text-align:left;width:auto;min-width:0" placeholder="https://…#…"><button class="btn primario chico" data-act="conectar">Conectar</button></div></div>`;
 
 /* ---------- instalar ---------- */
 let pedidoInstalar = null;
@@ -1289,6 +1297,7 @@ function vistaAjustes() {
     <label class="campo"><span>Precio sugerido = costo ×</span><input id="aj-margen" type="number" inputmode="decimal" step="0.1" min="1" value="${S.margen}"></label>
     <p class="ayuda">Con 2,5 un muffin que te cuesta $400 se sugiere a $1.000.</p>
     <button class="btn primario" data-act="aj-guardar">Guardar</button></div>
+    ${fam.codigo ? `<div class="tarjeta"><h2>¿Este celu es de mamá?</h2><p class="sub" style="margin:0 0 8px">Si tu mamá abrió la agenda en su celu y le aparece esto, pasala al modo mamá.</p><button class="btn chico" data-act="soy" data-q="mama" data-confirmar="1">👩 Pasar a modo mamá</button></div>` : ''}
     <div class="tarjeta"><h2>App en el celu o la compu</h2>${instalada() ? '<p class="vacio">✅ Ya está instalada.</p>' : tarjetaInstalar(true)}</div>
     ${fam.codigo ? `<div class="tarjeta"><h2>Chat con mamá y Dino</h2><p class="vacio">${chatOk === 'codigo' ? '⚠️ El link de conexión no es válido.' : '✅ Conectada.'}</p></div>` : tarjetaConectar()}
     ${fam.codigo ? `<div class="tarjeta"><h2>Avisos de Dino</h2>${avisosActivos() ? '<p class="vacio">✅ Activados: 14:10 y 19:00, y cuando mamá te escribe.</p><button class="btn chico" data-act="probar-avisos">Mandarme uno de prueba</button>' : tarjetaAvisos()}</div>` : ''}
@@ -1303,8 +1312,20 @@ function pintarNav() {
   const n = noLeidos();
   document.getElementById('nav').innerHTML = nav.map(([k, i, l]) => `<button class="${ui.vista === k ? 'activa' : ''}" data-act="ir" data-v="${k}"><span>${i}</span>${l}${k === 'chat' && n ? `<b class="globo">${n}</b>` : ''}</button>`).join('');
 }
+function pantallaQuien() {
+  return `<header><div><small>Mi Agenda Dulce</small><h1>¿De quién es este celu?</h1></div></header>
+    <div class="tarjeta" style="text-align:center"><img src="icono-192.png" alt="" style="width:84px;height:84px;border-radius:20px">
+    <p class="sub" style="margin:8px 0 14px">Elegí una sola vez. Cada una entra con lo suyo.</p>
+    <div style="display:grid;gap:10px"><button class="btn primario" style="padding:14px" data-act="soy" data-q="chica">👧 Soy Valentina</button>
+    <button class="btn" style="padding:14px" data-act="soy" data-q="mama">👩 Soy mamá</button></div></div>`;
+}
 function render() {
   const d = new Date();
+  if (fam.codigo && !fam.quien) {
+    document.body.classList.add('mama');
+    document.getElementById('app').innerHTML = pantallaQuien();
+    return;
+  }
   document.body.classList.toggle('mama', esMama());
   if (esMama()) {
     ui.vista = 'chat';
@@ -1436,6 +1457,14 @@ const acciones = {
   'activar-avisos': () => activarAvisos(),
   'probar-avisos': () => suscribirPush(true).then(() => avisar('Te mandé uno 🔔'), () => avisar('No pude mandarlo')),
   'conectar': () => conectarCon(document.getElementById('link-conexion').value),
+  'soy': async el => {
+    const quien = el.dataset.q;
+    if (el.dataset.confirmar && !confirm('¿Pasar este celu al modo mamá? Va a ver el chat y la agenda de Valentina.')) return;
+    fam = { codigo: fam.codigo, quien };
+    escribir(KEY_FAMILIA, fam);
+    if (avisosActivos()) await suscribirPush(false).catch(() => {});
+    location.reload();
+  },
   'novedades-todas': () => { ui.verTodasNov = true; render(); },
   'instalar': async () => { if (!pedidoInstalar) return; pedidoInstalar.prompt(); await pedidoInstalar.userChoice.catch(() => {}); pedidoInstalar = null; render(); },
   'ocultar-instalar': () => { S.ocultarInstalar = true; listo(); },
@@ -1501,11 +1530,11 @@ render();
   else if (ir === 'tareas') { ui.vista = 'colegio'; ui.colegio = 'tareas'; }
   render();
 })();
-if (fam.codigo) {
+if (fam.codigo && fam.quien) {
   traerMensajes();
   traerNovedades();
   if (avisosActivos()) suscribirPush(false).catch(() => {});
-  if (!esMama()) sincronizar();
+  if (esChica()) sincronizar();
   if (esMama() && !fam.nombre) api('hola').then(r => { if (r.nombre) { fam.nombre = r.nombre; escribir(KEY_FAMILIA, fam); render(); } }).catch(() => {});
 }
 </script>
