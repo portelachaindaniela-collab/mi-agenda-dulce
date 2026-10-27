@@ -926,7 +926,7 @@ const tarjetaConectar = () => fam.codigo ? '' : `<div class="tarjeta"><h2>🔗 C
 let pedidoInstalar = null;
 const instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedidoInstalar = e; if (ui.vista === 'inicio' || ui.vista === 'ajustes') render(); });
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedidoInstalar = e; if (esMama() ? ui.mama !== 'chat' || !document.getElementById('chat-texto')?.value : ui.vista === 'inicio' || ui.vista === 'ajustes') render(); });
 addEventListener('appinstalled', () => { pedidoInstalar = null; avisar('¡Instalada! Buscala con el dino 🦖'); render(); });
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
@@ -1312,6 +1312,13 @@ function pintarNav() {
   const n = noLeidos();
   document.getElementById('nav').innerHTML = nav.map(([k, i, l]) => `<button class="${ui.vista === k ? 'activa' : ''}" data-act="ir" data-v="${k}"><span>${i}</span>${l}${k === 'chat' && n ? `<b class="globo">${n}</b>` : ''}</button>`).join('');
 }
+// Barra fina arriba de las pestañas de mamá: botón Instalar donde el navegador lo permite, o los pasos a mano.
+function bannerInstalarMama() {
+  if (instalada() || leer('agenda-dulce-sin-banner', false)) return '';
+  const pasos = pedidoInstalar ? '' : esIOS ? 'Tocá Compartir ⬆️ → <strong>Agregar a inicio</strong>' : /SamsungBrowser/i.test(navigator.userAgent) ? 'Menú ☰ → <strong>Agregar página a</strong> → Pantalla de inicio' : /Firefox/i.test(navigator.userAgent) ? 'Menú ⋮ → <strong>Instalar</strong>' : 'Menú ⋮ → <strong>Instalar app</strong> o <strong>Agregar a pantalla principal</strong>';
+  return `<div class="instalar" style="padding:7px 10px;margin-bottom:8px;gap:8px"><img src="icono-192.png" alt="" style="width:32px;height:32px;border-radius:8px"><div style="font-size:13px"><b style="font-size:14px">📲 Tenela en tu pantalla</b><span>${pasos}</span></div>
+    ${pedidoInstalar ? '<button class="btn primario chico" data-act="instalar">Instalar</button>' : ''}<button class="btn chico" data-act="ocultar-banner" aria-label="Cerrar">✕</button></div>`;
+}
 function pantallaQuien() {
   return `<header><div><small>Mi Agenda Dulce</small><h1>¿De quién es este celu?</h1></div></header>
     <div class="tarjeta" style="text-align:center"><img src="icono-192.png" alt="" style="width:84px;height:84px;border-radius:20px">
@@ -1334,7 +1341,7 @@ function render() {
     const titulos = { chat: '💬 Chat con ', novedades: '🔔 Avisos de ', tareas: '📝 Tareas de ', examenes: '📚 Exámenes de ', calendario: '📅 Calendario de ' };
     const globos = { chat: noLeidos(), novedades: novSinLeer() };
     const tabs = `<div class="pestanas">${pest.map(([k, i, l]) => `<button class="pestana ${ui.mama === k ? 'activa' : ''}" data-act="sub-mama" data-s="${k}"><span>${i}</span>${l}${globos[k] ? `<span class="globo">${globos[k]}</span>` : ''}</button>`).join('')}</div>`;
-    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.mama]}${nom}</h1></div></header>${tabs}${ui.mama === 'chat' ? vistaChat() : `<div class="mama-cuerpo">${ui.mama === 'novedades' ? vistaNovedades() : vistaMama(ui.mama)}</div>`}`;
+    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.mama]}${nom}</h1></div></header>${bannerInstalarMama()}${tabs}${ui.mama === 'chat' ? vistaChat() : `<div class="mama-cuerpo">${ui.mama === 'novedades' ? vistaNovedades() : vistaMama(ui.mama)}</div>`}`;
     if (ui.mama === 'chat') { pintarChat(true); if (noLeidos()) marcarLeidos(); }
     if (ui.mama === 'novedades' && novSinLeer()) marcarNovedadesLeidas();
     return;
@@ -1468,6 +1475,7 @@ const acciones = {
   'novedades-todas': () => { ui.verTodasNov = true; render(); },
   'instalar': async () => { if (!pedidoInstalar) return; pedidoInstalar.prompt(); await pedidoInstalar.userChoice.catch(() => {}); pedidoInstalar = null; render(); },
   'ocultar-instalar': () => { S.ocultarInstalar = true; listo(); },
+  'ocultar-banner': () => { escribir('agenda-dulce-sin-banner', true); render(); },
   'aj-guardar': () => { S.nombre = document.getElementById('aj-nombre').value.trim(); S.margen = num(document.getElementById('aj-margen').value) || 2.5; avisar('Guardado'); listo(); },
   'exportar': () => {
     const a = document.createElement('a');
