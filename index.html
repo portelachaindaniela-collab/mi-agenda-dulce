@@ -197,8 +197,8 @@ a.btn.primario{color:var(--en-boton)}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
 body.mama #app{height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 body.mama nav.abajo{display:none}
-body.mama .pestanas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 10px;padding:2px 0 4px;overflow:visible}
-body.mama .pestana{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;font-size:12.5px;border-radius:14px}
+body.mama .pestanas{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:0 0 10px;padding:2px 0 4px;overflow:visible}
+body.mama .pestana{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 1px;font-size:11.5px;border-radius:14px;min-width:0}
 body.mama .pestana span:first-child{font-size:18px;line-height:1.1}
 body.mama .chat{flex:1;height:auto;min-height:0}
 body.mama .mama-cuerpo{flex:1;overflow-y:auto;min-height:0}
@@ -279,31 +279,18 @@ const mesDe = s => s ? s.slice(0, 7) : '';
 const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
 const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
+// Lo que traía de ejemplo la primera versión; se borra si quedó sin tocar.
+const INGREDIENTES_EJEMPLO = { 'Harina 0000': 1200, 'Azúcar': 1300, 'Huevos': 3500, 'Manteca': 2800, 'Leche': 1500, 'Aceite': 3000, 'Polvo de hornear': 900, 'Chips de chocolate': 2500, 'Limones': 300, 'Pirotines': 1500 };
+const RECETAS_EJEMPLO = ['Budín de limón', 'Muffins con chips'];
+
 function semilla() {
-  const ingredientes = [
-    ['Harina 0000', 1000, 'g', 1200], ['Azúcar', 1000, 'g', 1300], ['Huevos', 12, 'u', 3500],
-    ['Manteca', 200, 'g', 2800], ['Leche', 1000, 'ml', 1500], ['Aceite', 900, 'ml', 3000],
-    ['Polvo de hornear', 50, 'g', 900], ['Chips de chocolate', 150, 'g', 2500],
-    ['Limones', 1, 'u', 300], ['Pirotines', 50, 'u', 1500]
-  ].map(([nombre, cantidad, unidad, precio]) => ({ id: uid(), nombre, cantidad, unidad, precio }));
-  const ing = n => ingredientes.find(i => i.nombre === n).id;
   const materias = [['Matemática', 0], ['Lengua', 1], ['Inglés', 2], ['Historia', 3], ['Biología', 4], ['Físico-Química', 6], ['Ed. Física', 5]]
     .map(([nombre, c]) => ({ id: uid(), nombre, color: COLORES[c][0], profe: '' }));
   return {
-    nombre: 'Valentina', margen: 2.5, ejemplos: true, ocultarInstalar: false,
+    nombre: 'Valentina', margen: 2.5, ejemplos: false, ocultarInstalar: false,
     materias, horario: { 1: [], 2: [], 3: [], 4: [], 5: [] },
     tareas: [], examenes: [], eventos: [],
-    ingredientes,
-    recetas: [
-      { id: uid(), nombre: 'Budín de limón', rinde: 1, precio: 0, pasos: '', items: [
-        { ingId: ing('Harina 0000'), cant: 200 }, { ingId: ing('Azúcar'), cant: 180 }, { ingId: ing('Huevos'), cant: 3 },
-        { ingId: ing('Aceite'), cant: 100 }, { ingId: ing('Leche'), cant: 120 }, { ingId: ing('Polvo de hornear'), cant: 10 },
-        { ingId: ing('Limones'), cant: 2 }] },
-      { id: uid(), nombre: 'Muffins con chips', rinde: 12, precio: 0, pasos: '', items: [
-        { ingId: ing('Harina 0000'), cant: 250 }, { ingId: ing('Azúcar'), cant: 150 }, { ingId: ing('Huevos'), cant: 2 },
-        { ingId: ing('Manteca'), cant: 100 }, { ingId: ing('Leche'), cant: 200 }, { ingId: ing('Polvo de hornear'), cant: 10 },
-        { ingId: ing('Chips de chocolate'), cant: 100 }, { ingId: ing('Pirotines'), cant: 12 }] }
-    ],
+    ingredientes: [], recetas: [],
     lista: [], ventas: [], gastos: []
   };
 }
@@ -312,6 +299,14 @@ let S = leer(KEY, null);
 if (!S || typeof S !== 'object') S = semilla();
 S = Object.assign(semilla(), S);
 const sinTildes = t => t.normalize('NFD').replace(/[^a-zA-Z]/g, '').toLowerCase();
+if (S.ejemplos) {
+  const recetasIntactas = S.recetas.filter(r => RECETAS_EJEMPLO.includes(r.nombre) && !num(r.precio) && !r.pasos);
+  const usados = new Set(S.recetas.filter(r => !recetasIntactas.includes(r)).flatMap(r => r.items.map(it => it.ingId)));
+  S.recetas = S.recetas.filter(r => !recetasIntactas.includes(r));
+  S.ingredientes = S.ingredientes.filter(i => usados.has(i.id) || S.lista.some(l => l.ingId === i.id) || INGREDIENTES_EJEMPLO[i.nombre] !== num(i.precio));
+  S.ejemplos = false;
+  escribir(KEY, S);
+}
 if (!S.materias.some(m => sinTildes(m.nombre).includes('fisicoquimica'))) { S.materias.push({ id: uid(), nombre: 'Físico-Química', color: COLORES[6][0], profe: '' }); escribir(KEY, S); }
 let timerSync;
 const guardarTodo = () => {
@@ -321,7 +316,7 @@ const guardarTodo = () => {
 async function sincronizar() {
   try {
     await api('sincronizar', { datos: {
-      tareas: S.tareas.map(t => ({ id: t.id, titulo: t.titulo, materia: materia(t.materiaId)?.nombre || '', fecha: t.fecha, hecha: !!t.hecha })),
+      tareas: S.tareas.map(t => ({ id: t.id, titulo: t.titulo, materia: materia(t.materiaId)?.nombre || '', fecha: t.fecha, hecha: !!t.hecha, en_curso: !t.hecha && !!t.enCurso })),
       examenes: S.examenes.map(e => ({ id: e.id, materia: materia(e.materiaId)?.nombre || '', tema: e.tema, fecha: e.fecha, nota: e.nota === '' || e.nota == null ? null : num(e.nota) })),
       eventos: S.eventos.map(e => ({ id: e.id, titulo: e.titulo, fecha: e.fecha, tipo: e.tipo }))
     } });
@@ -720,7 +715,7 @@ function contextoDino() {
   L.push('Mañana (' + DIAS_LARGOS[manana] + ') tiene: ' + ((S.horario[manana] || []).map(nombreMat).join(', ') || 'no tiene clases cargadas'));
   const pend = pendientes();
   L.push('Tareas pendientes (' + pend.length + '):');
-  pend.slice(0, 25).forEach(t => L.push(`- ${t.titulo} · ${nombreMat(t.materiaId)} · para ${t.fecha || 'sin fecha'}`));
+  pend.slice(0, 25).forEach(t => L.push(`- ${t.titulo} · ${nombreMat(t.materiaId)} · para ${t.fecha || 'sin fecha'}${t.enCurso ? ' · EN CURSO' : ''}`));
   const exs = proxExamenes();
   L.push('Próximos exámenes:');
   exs.slice(0, 10).forEach(e => L.push(`- ${nombreMat(e.materiaId)}: ${e.tema} · ${e.fecha} (faltan ${diasHasta(e.fecha)} días)`));
@@ -868,15 +863,56 @@ async function enviarMensaje(texto) {
 }
 function notificar(m) {
   document.title = '(' + noLeidos() + ') Mi Agenda Dulce';
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!('Notification' in window) || Notification.permission !== 'granted' || avisosActivos()) return;
   const titulo = m.de === 'mama' ? 'Mamá' : (S.nombre || 'Tu hija');
   const op = { body: m.texto, icon: 'icono-192.png', badge: 'icono-192.png', tag: 'chat-agenda' };
   navigator.serviceWorker?.ready.then(r => r.showNotification(titulo, op)).catch(() => { try { new Notification(titulo, op); } catch (e) {} });
 }
-setInterval(() => { if (!document.hidden) traerMensajes(); }, 12000);
+setInterval(() => { if (!document.hidden) { traerMensajes(); traerNovedades(); } }, 12000);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) { traerMensajes(); document.title = 'Mi Agenda Dulce'; if (viendoChatMama() && noLeidos()) marcarLeidos(); }
 });
+
+/* ---------- avisos push ---------- */
+const KEY_AVISOS = 'agenda-dulce-avisos';
+const soportaPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const avisosActivos = () => soportaPush() && Notification.permission === 'granted' && leer(KEY_AVISOS, false);
+const b64aBytes = b => { const t = atob((b + '='.repeat((4 - b.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(t, c => c.charCodeAt(0)); };
+async function suscribirPush(probar) {
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    const { clave } = await api('push-clave');
+    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64aBytes(clave) });
+  }
+  await api('suscribir', { de: yo(), sub: sub.toJSON(), probar });
+}
+async function activarAvisos() {
+  if (!fam.codigo) { avisar('Primero conectá la agenda con el link'); return; }
+  if (!soportaPush()) { avisar(esIOS && !instalada() ? 'En iPhone primero instalá la app: Compartir → Agregar a inicio' : 'Este navegador no permite avisos'); return; }
+  const permiso = await Notification.requestPermission();
+  if (permiso !== 'granted') { avisar('Sin permiso no te puedo avisar. Activalo en los ajustes del celu.'); render(); return; }
+  try { await suscribirPush(true); escribir(KEY_AVISOS, true); avisar('¡Avisos activados! 🔔'); }
+  catch (e) { avisar('No pude activar los avisos. Probá de nuevo.'); }
+  render();
+}
+function tarjetaAvisos() {
+  if (!fam.codigo || avisosActivos()) return '';
+  const bloqueado = 'Notification' in window && Notification.permission === 'denied';
+  const texto = esMama() ? `Te aviso al celu cada vez que ${esc(fam.nombre || 'Valentina')} agrega, empieza o termina una tarea, o carga un examen o una nota.` : 'Te aviso a las 14:10 lo que tenés para mañana y a las 19:00 lo que te falta resolver.';
+  return `<div class="instalar" style="background:var(--ambar-soft)"><img src="icono-192.png" alt=""><div><b>🔔 Activá los avisos</b>${bloqueado ? 'Están bloqueados: activalos en los ajustes del navegador o del celu para esta app.' : texto}</div>${bloqueado ? '' : '<button class="btn primario chico" data-act="activar-avisos">Activar</button>'}</div>`;
+}
+
+/* ---------- conectar pegando el link ---------- */
+function conectarCon(texto) {
+  let h;
+  try { h = new URLSearchParams(new URL(String(texto).trim()).hash.slice(1)); } catch (e) { h = null; }
+  if (!h || !h.get('familia')) { avisar('Ese no es el link de conexión. Copialo entero del WhatsApp.'); return; }
+  escribir(KEY_FAMILIA, { codigo: h.get('familia'), quien: h.get('quien') === 'mama' ? 'mama' : 'chica' });
+  location.reload();
+}
+const tarjetaConectar = () => fam.codigo ? '' : `<div class="tarjeta"><h2>🔗 Conectar con mamá y Dino</h2><p class="sub" style="margin:0 0 8px">Pegá acá el link que te mandaron por WhatsApp. Se hace una sola vez.</p>
+  <div class="botones"><input id="link-conexion" class="precio-in" style="flex:1;text-align:left;width:auto;min-width:0" placeholder="https://…#familia=…"><button class="btn primario chico" data-act="conectar">Conectar</button></div></div>`;
 
 /* ---------- instalar ---------- */
 let pedidoInstalar = null;
@@ -899,7 +935,8 @@ function filaTarea(t) {
   return `<div class="fila"><button class="check ${t.hecha ? 'si' : ''}" data-act="tarea-ok" data-id="${t.id}" aria-label="Marcar hecha">${t.hecha ? '✓' : ''}</button>
     <div class="cuerpo tocable" data-act="tarea-edit" data-id="${t.id}"><div class="titulo ${t.hecha ? 'tachado' : ''}">${esc(t.titulo)}</div>
     <div class="sub"><span class="punto" style="background:${colorMat(t.materiaId)}"></span> ${esc(nombreMat(t.materiaId))}</div></div>
-    <span class="chip ${atrasada ? 'rojo' : diasHasta(t.fecha) <= 1 ? 'ambar' : ''}">${cuando(t.fecha)}</span></div>`;
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="chip ${atrasada ? 'rojo' : diasHasta(t.fecha) <= 1 ? 'ambar' : ''}">${cuando(t.fecha)}</span>
+    ${t.hecha ? '' : `<button class="chip ${t.enCurso ? 'violeta' : ''}" data-act="tarea-curso" data-id="${t.id}">${t.enCurso ? '⏳ En curso' : '▶ Empezar'}</button>`}</div></div>`;
 }
 function filaExamen(e) {
   const n = diasHasta(e.fecha);
@@ -931,7 +968,7 @@ function vistaInicio() {
   const pedidos = S.ventas.filter(v => !v.entregado).sort((a, b) => a.fecha.localeCompare(b.fecha));
   const r = resumenMes(hoy().slice(0, 7));
   const sinLeer = noLeidos();
-  return `${tarjetaInstalar(false)}
+  return `${tarjetaConectar()}${tarjetaInstalar(false)}${tarjetaAvisos()}
   ${sinLeer ? `<button class="aviso" style="width:100%;border:0;text-align:left;cursor:pointer;background:var(--rosa-soft);color:var(--rosa)" data-act="ir" data-v="chat" data-s="mama">💬 Mamá te escribió (${sinLeer})</button>` : ''}
   ${cole.length ? `<div class="hoy-cole">Hoy: ${cole.map(id => `<span class="chip" style="background:${colorMat(id)};color:#fff">${esc(nombreMat(id))}</span>`).join('')}</div>` : ''}
   <div class="rapidos">
@@ -1103,9 +1140,9 @@ function vistaChat() {
   const tabs = esMama() ? '' : `<div class="pestanas"><button class="pestana ${ui.chat === 'dino' ? 'activa' : ''}" data-act="sub-chat" data-s="dino">🦖 Dino</button>
     <button class="pestana ${ui.chat === 'mama' ? 'activa' : ''}" data-act="sub-chat" data-s="mama">💬 Mamá${noLeidos() ? `<span class="globo">${noLeidos()}</span>` : ''}</button></div>`;
   const esDino = !esMama() && ui.chat === 'dino';
-  const permisoAvisos = !esDino && 'Notification' in window && Notification.permission === 'default';
+  const permisoAvisos = !esDino && fam.codigo && soportaPush() && !avisosActivos() && Notification.permission !== 'denied';
   return `${tabs}<div class="chat">
-    ${permisoAvisos ? `<div class="adjunto" style="padding-bottom:6px"><span style="flex:1">Activá los avisos para enterarte cuando te escriben.</span><button class="btn chico" style="background:var(--violeta-soft);color:var(--violeta)" data-act="permiso-avisos">🔔 Activar</button></div>` : ''}
+    ${permisoAvisos ? `<div class="adjunto" style="padding-bottom:6px"><span style="flex:1">Activá los avisos para enterarte cuando te escriben.</span><button class="btn chico" style="background:var(--violeta-soft);color:var(--violeta)" data-act="activar-avisos">🔔 Activar</button></div>` : ''}
     <div class="chat-lista" id="chat-lista"></div>
     ${esDino ? `<div class="sugerencias" id="sugerencias"></div><div id="adjunto"></div>` : ''}
     <div class="escribir">${esDino ? '<button data-act="dino-foto" aria-label="Agregar foto">📷</button>' : ''}
@@ -1146,6 +1183,48 @@ function pintarChat(abajo) {
     }
   }
   if (abajo) lista.scrollTop = lista.scrollHeight;
+}
+
+const KEY_NOV = 'agenda-dulce-novedades';
+let novedades = leer(KEY_NOV, []);
+let novCargadas = false;
+const novSinLeer = () => novedades.filter(n => !n.leida).length;
+async function traerNovedades() {
+  if (!fam.codigo || !esMama()) return;
+  try {
+    const desde = novedades.reduce((m, n) => Math.max(m, n.id), 0);
+    const { novedades: nuevas } = await api('novedades', { desde });
+    novCargadas = true;
+    const sumar = (nuevas || []).filter(n => !novedades.some(x => x.id === n.id));
+    if (sumar.length) {
+      novedades = [...novedades, ...sumar].slice(-300);
+      escribir(KEY_NOV, novedades);
+      if (!avisosActivos() && document.hidden) notificar({ de: 'chica', texto: sumar[sumar.length - 1].texto });
+    }
+    if (sumar.length || ui.mama === 'novedades') {
+      if (ui.mama === 'novedades' && !document.hidden && novSinLeer()) marcarNovedadesLeidas();
+      if (ui.mama !== 'chat') render(); else pintarNav();
+    }
+  } catch (e) { novCargadas = true; }
+}
+async function marcarNovedadesLeidas() {
+  novedades.forEach(n => { n.leida = true; });
+  escribir(KEY_NOV, novedades);
+  try { await api('novedades-leidas'); } catch (e) {}
+}
+function vistaNovedades() {
+  const nom = esc(fam.nombre || 'Valentina');
+  const lista = novedades.slice().reverse();
+  const mostrar = ui.verTodasNov ? lista : lista.slice(0, 60);
+  let dia = '';
+  const filas = mostrar.map(n => {
+    const d = iso(new Date(n.creado));
+    const sep = d !== dia ? (dia = d, `<div class="sub" style="font-weight:800;margin:10px 0 2px;text-transform:capitalize">${cuando(d)}</div>`) : '';
+    return sep + `<div class="fila"><div class="cuerpo"><div class="titulo" style="font-weight:${n.leida ? 600 : 800}">${esc(n.texto)}</div></div><span class="sub">${horaDe(n.creado)}</span></div>`;
+  }).join('');
+  return `${tarjetaAvisos()}<div class="tarjeta"><h2>Cambios en la agenda de ${nom} <button class="btn chico" data-act="recargar-novedades" aria-label="Actualizar">↻</button></h2>
+    ${filas || `<p class="vacio">${novCargadas ? `Todavía no hay cambios. Acá vas a ver cuando ${nom} agrega, empieza o termina una tarea, cuando carga un examen o una nota, y cuando cambia una fecha.` : 'Cargando…'}</p>`}
+    ${!ui.verTodasNov && lista.length > 60 ? '<button class="btn chico" data-act="novedades-todas">Ver todos</button>' : ''}</div>`;
 }
 
 let agendaMama = null;
@@ -1211,7 +1290,8 @@ function vistaAjustes() {
     <p class="ayuda">Con 2,5 un muffin que te cuesta $400 se sugiere a $1.000.</p>
     <button class="btn primario" data-act="aj-guardar">Guardar</button></div>
     <div class="tarjeta"><h2>App en el celu o la compu</h2>${instalada() ? '<p class="vacio">✅ Ya está instalada.</p>' : tarjetaInstalar(true)}</div>
-    <div class="tarjeta"><h2>Chat con mamá y Dino</h2><p class="vacio">${fam.codigo ? (chatOk === 'codigo' ? '⚠️ El link de conexión no es válido.' : '✅ Conectada.') : 'Sin conectar: abrí el link de conexión en este aparato.'}</p></div>
+    ${fam.codigo ? `<div class="tarjeta"><h2>Chat con mamá y Dino</h2><p class="vacio">${chatOk === 'codigo' ? '⚠️ El link de conexión no es válido.' : '✅ Conectada.'}</p></div>` : tarjetaConectar()}
+    ${fam.codigo ? `<div class="tarjeta"><h2>Avisos de Dino</h2>${avisosActivos() ? '<p class="vacio">✅ Activados: 14:10 y 19:00, y cuando mamá te escribe.</p><button class="btn chico" data-act="probar-avisos">Mandarme uno de prueba</button>' : tarjetaAvisos()}</div>` : ''}
     <div class="tarjeta"><h2>Copia de seguridad</h2><p class="sub">Todo se guarda en este aparato. Bajate una copia de vez en cuando por si se borra (las fotos y archivos del cole no entran en la copia).</p>
     <div class="botones"><button class="btn" data-act="exportar">⬇️ Bajar copia</button><label class="btn">⬆️ Cargar copia<input type="file" accept="application/json" id="importar" hidden></label></div></div>
     <div class="tarjeta"><h2>Empezar de cero</h2><p class="sub">Borra todo lo que anotaste.</p><button class="btn peligro" data-act="borrar-todo">Borrar todo</button></div></div>`;
@@ -1229,11 +1309,13 @@ function render() {
   if (esMama()) {
     ui.vista = 'chat';
     const nom = esc(fam.nombre || 'Valentina');
-    const pest = [['chat', '💬', 'Chat'], ['tareas', '📝', 'Tareas'], ['examenes', '📚', 'Exámenes'], ['calendario', '📅', 'Calendario']];
-    const titulos = { chat: '💬 Chat con ', tareas: '📝 Tareas de ', examenes: '📚 Exámenes de ', calendario: '📅 Calendario de ' };
-    const tabs = `<div class="pestanas">${pest.map(([k, i, l]) => `<button class="pestana ${ui.mama === k ? 'activa' : ''}" data-act="sub-mama" data-s="${k}"><span>${i}</span>${l}${k === 'chat' && noLeidos() ? `<span class="globo">${noLeidos()}</span>` : ''}</button>`).join('')}</div>`;
-    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.mama]}${nom}</h1></div></header>${tabs}${ui.mama === 'chat' ? vistaChat() : `<div class="mama-cuerpo">${vistaMama(ui.mama)}</div>`}`;
+    const pest = [['chat', '💬', 'Chat'], ['novedades', '🔔', 'Avisos'], ['tareas', '📝', 'Tareas'], ['examenes', '📚', 'Exámenes'], ['calendario', '📅', 'Calendario']];
+    const titulos = { chat: '💬 Chat con ', novedades: '🔔 Avisos de ', tareas: '📝 Tareas de ', examenes: '📚 Exámenes de ', calendario: '📅 Calendario de ' };
+    const globos = { chat: noLeidos(), novedades: novSinLeer() };
+    const tabs = `<div class="pestanas">${pest.map(([k, i, l]) => `<button class="pestana ${ui.mama === k ? 'activa' : ''}" data-act="sub-mama" data-s="${k}"><span>${i}</span>${l}${globos[k] ? `<span class="globo">${globos[k]}</span>` : ''}</button>`).join('')}</div>`;
+    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.mama]}${nom}</h1></div></header>${tabs}${ui.mama === 'chat' ? vistaChat() : `<div class="mama-cuerpo">${ui.mama === 'novedades' ? vistaNovedades() : vistaMama(ui.mama)}</div>`}`;
     if (ui.mama === 'chat') { pintarChat(true); if (noLeidos()) marcarLeidos(); }
+    if (ui.mama === 'novedades' && novSinLeer()) marcarNovedadesLeidas();
     return;
   }
   const vistas = { inicio: vistaInicio, colegio: vistaColegio, calendario: vistaCalendario, negocio: vistaNegocio, chat: vistaChat, ajustes: vistaAjustes };
@@ -1265,10 +1347,12 @@ const acciones = {
   'sub-chat': el => { ui.chat = el.dataset.s; render(); },
   'sub-mama': el => { ui.mama = el.dataset.s; if (ui.mama !== 'chat' && agendaMama && Date.now() - agendaMama.t > 30000) agendaMama = null; render(); },
   'recargar-agenda': () => { agendaMama = null; render(); },
+  'recargar-novedades': () => traerNovedades(),
   'copiar-ics': () => navigator.clipboard.writeText(agendaMama.ics).then(() => avisar('Link copiado'), () => prompt('Copiá este link:', agendaMama.ics)),
   'nueva-tarea': () => formTarea(),
   'tarea-edit': el => formTarea(buscar('tareas', el.dataset.id)),
-  'tarea-ok': el => { const t = buscar('tareas', el.dataset.id); t.hecha = !t.hecha; if (t.hecha) avisar('¡Bien ahí! ✨'); listo(); },
+  'tarea-ok': el => { const t = buscar('tareas', el.dataset.id); t.hecha = !t.hecha; if (t.hecha) { t.enCurso = false; avisar('¡Bien ahí! ✨'); } listo(); },
+  'tarea-curso': el => { const t = buscar('tareas', el.dataset.id); t.enCurso = !t.enCurso; if (t.enCurso) avisar('¡Dale que podés! 💪'); listo(); },
   'tarea-dino': el => { const t = buscar('tareas', el.dataset.id); cerrarModal(); irADinoCon(`Tengo esta tarea de ${nombreMat(t.materiaId)}: "${t.titulo}". ¿Me ayudás a arrancar?`); },
   'ver-hechas': () => { ui.verHechas = !ui.verHechas; render(); },
   'nuevo-examen': () => formExamen(),
@@ -1349,7 +1433,10 @@ const acciones = {
     guardarDino();
     pintarChat();
   },
-  'permiso-avisos': () => Notification.requestPermission().then(() => render()),
+  'activar-avisos': () => activarAvisos(),
+  'probar-avisos': () => suscribirPush(true).then(() => avisar('Te mandé uno 🔔'), () => avisar('No pude mandarlo')),
+  'conectar': () => conectarCon(document.getElementById('link-conexion').value),
+  'novedades-todas': () => { ui.verTodasNov = true; render(); },
   'instalar': async () => { if (!pedidoInstalar) return; pedidoInstalar.prompt(); await pedidoInstalar.userChoice.catch(() => {}); pedidoInstalar = null; render(); },
   'ocultar-instalar': () => { S.ocultarInstalar = true; listo(); },
   'aj-guardar': () => { S.nombre = document.getElementById('aj-nombre').value.trim(); S.margen = num(document.getElementById('aj-margen').value) || 2.5; avisar('Guardado'); listo(); },
@@ -1405,8 +1492,19 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !document.getElementById('modal').hidden) cerrarModal();
 });
 render();
+(() => {
+  const ir = new URLSearchParams(location.search).get('ir');
+  if (!ir) return;
+  history.replaceState(null, '', location.pathname);
+  if (esMama()) ui.mama = ['chat', 'novedades', 'tareas', 'examenes', 'calendario'].includes(ir) ? ir : 'novedades';
+  else if (ir === 'chat') { ui.vista = 'chat'; ui.chat = 'mama'; }
+  else if (ir === 'tareas') { ui.vista = 'colegio'; ui.colegio = 'tareas'; }
+  render();
+})();
 if (fam.codigo) {
   traerMensajes();
+  traerNovedades();
+  if (avisosActivos()) suscribirPush(false).catch(() => {});
   if (!esMama()) sincronizar();
   if (esMama() && !fam.nombre) api('hola').then(r => { if (r.nombre) { fam.nombre = r.nombre; escribir(KEY_FAMILIA, fam); render(); } }).catch(() => {});
 }

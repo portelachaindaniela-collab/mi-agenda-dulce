@@ -1,7 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
-// Backend de Mi Agenda Dulce: Dino (tutor con IA) y el chat entre mamá y la chica. No hay cuentas: cada familia tiene un
+// Backend de Mi Agenda Dulce: Dino (tutor con IA), el chat entre mamá y la chica, las novedades del cole que ve mamá y
+// los avisos push (recordatorios de Dino a las 14:10 y 19:00, que dispara pg_cron con x-trabajador-secreto). No hay cuentas: cada familia tiene un
 // código largo al azar que la app guarda; acá solo se compara su SHA-256 con dulce_familias. Las tablas no tienen
 // políticas RLS, así que solo esta función (service role) las lee y escribe.
 
@@ -10,10 +12,32 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const env = Deno.env.toObject();
 const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODELO = env.DINO_MODELO || "openai/gpt-oss-120b";
 const MODELO_VISION = env.DINO_MODELO_VISION || "meta-llama/llama-4-scout-17b-16e-instruct";
 const LIMITE_DIARIO = 250;
 const hoyAR = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+const sumarDias = (f: string, n: number) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const diaDe = (f: string) => DIAS[new Date(f + "T12:00:00Z").getUTCDay()];
+const fechaLinda = (f: string | null) => f ? `${diaDe(f)} ${Number(f.slice(8))}/${Number(f.slice(5, 7))}` : "sin fecha";
+if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) webpush.setVapidDetails("https://danielaportelachain.vercel.app", env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
+
+async function avisar(familiaId: string, quien: "mama" | "chica", aviso: { titulo: string; texto: string; ir?: string; tag?: string }) {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return 0;
+  const { data: subs } = await db.from("dulce_push").select("id,endpoint,p256dh,auth").eq("familia_id", familiaId).eq("quien", quien).eq("activo", true);
+  let n = 0;
+  for (const s of subs ?? []) {
+    try {
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(aviso), { TTL: 6 * 3600 });
+      n++;
+    } catch (e: any) {
+      if (e?.statusCode === 404 || e?.statusCode === 410) await db.from("dulce_push").update({ activo: false }).eq("id", s.id);
+      console.error("agenda-dulce push", s.id, e?.statusCode ?? String(e));
+    }
+  }
+  return n;
+}
 
 async function sha256(texto: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
@@ -31,11 +55,75 @@ const lista = (v: unknown, max: number) => Array.isArray(v) ? v.slice(0, max) : 
 const fechaOk = (f: unknown) => typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f) ? f : null;
 function limpiarAgenda(d: any) {
   return {
-    tareas: lista(d?.tareas, 300).map((t: any) => ({ id: texto(t.id, 40), titulo: texto(t.titulo, 200), materia: texto(t.materia, 60), fecha: fechaOk(t.fecha), hecha: !!t.hecha })),
+    tareas: lista(d?.tareas, 300).map((t: any) => ({ id: texto(t.id, 40), titulo: texto(t.titulo, 200), materia: texto(t.materia, 60), fecha: fechaOk(t.fecha), hecha: !!t.hecha, en_curso: !t.hecha && !!t.en_curso })),
     examenes: lista(d?.examenes, 200).map((e: any) => ({ id: texto(e.id, 40), materia: texto(e.materia, 60), tema: texto(e.tema, 200), fecha: fechaOk(e.fecha), nota: typeof e.nota === "number" ? e.nota : null })),
     eventos: lista(d?.eventos, 200).map((e: any) => ({ id: texto(e.id, 40), titulo: texto(e.titulo, 200), fecha: fechaOk(e.fecha), tipo: texto(e.tipo, 20) })),
   };
 }
+// Qué cambió entre dos copias de la agenda, en frases para mamá.
+function novedadesEntre(antes: any, ahora: any): { tipo: string; texto: string }[] {
+  const out: { tipo: string; texto: string }[] = [];
+  const porId = (l: any[]) => new Map((l ?? []).map((x: any) => [x.id, x]));
+  const de = (m: string) => m ? ` de ${m}` : "";
+  const ta = porId(antes.tareas), tn = porId(ahora.tareas);
+  for (const [id, t] of tn) {
+    const v: any = ta.get(id);
+    if (!v) { out.push({ tipo: "tarea", texto: `📝 Nueva tarea${de(t.materia)}: ${t.titulo} (para el ${fechaLinda(t.fecha)})` }); continue; }
+    if (!v.hecha && t.hecha) out.push({ tipo: "tarea", texto: `✅ Terminó la tarea${de(t.materia)}: ${t.titulo}` });
+    else if (v.hecha && !t.hecha) out.push({ tipo: "tarea", texto: `↩️ Volvió a marcar como pendiente: ${t.titulo}` });
+    else if (!v.en_curso && t.en_curso) out.push({ tipo: "tarea", texto: `⏳ Empezó la tarea${de(t.materia)}: ${t.titulo}` });
+    else if (v.en_curso && !t.en_curso && !t.hecha) out.push({ tipo: "tarea", texto: `⏸️ Pausó la tarea: ${t.titulo}` });
+    if (v.fecha !== t.fecha) out.push({ tipo: "tarea", texto: `📅 Cambió la fecha de "${t.titulo}" al ${fechaLinda(t.fecha)}` });
+    if (v.titulo !== t.titulo) out.push({ tipo: "tarea", texto: `✏️ Cambió la tarea "${v.titulo}" por "${t.titulo}"` });
+  }
+  for (const [id, v] of ta) if (!tn.has(id)) out.push({ tipo: "tarea", texto: `🗑️ Borró la tarea${de((v as any).materia)}: ${(v as any).titulo}` });
+  const ea = porId(antes.examenes), en = porId(ahora.examenes);
+  for (const [id, e] of en) {
+    const v: any = ea.get(id);
+    if (!v) { out.push({ tipo: "examen", texto: `📚 Nuevo examen${de(e.materia)}: ${e.tema} (${fechaLinda(e.fecha)})` }); continue; }
+    if (v.nota == null && e.nota != null) out.push({ tipo: "nota", texto: `🎯 Sacó ${String(e.nota).replace(".", ",")} en el examen${de(e.materia)} (${e.tema})` });
+    else if (v.nota != null && e.nota != null && v.nota !== e.nota) out.push({ tipo: "nota", texto: `🎯 Cambió la nota${de(e.materia)} (${e.tema}): ${String(e.nota).replace(".", ",")}` });
+    if (v.fecha !== e.fecha) out.push({ tipo: "examen", texto: `📅 El examen${de(e.materia)} (${e.tema}) pasó al ${fechaLinda(e.fecha)}` });
+  }
+  for (const [id, v] of ea) if (!en.has(id)) out.push({ tipo: "examen", texto: `🗑️ Borró el examen${de((v as any).materia)}: ${(v as any).tema}` });
+  const va = porId(antes.eventos), vn = porId(ahora.eventos);
+  for (const [id, e] of vn) if (!va.has(id)) out.push({ tipo: "evento", texto: `⭐ Nuevo evento: ${e.titulo} (${fechaLinda(e.fecha)})` });
+  for (const [id, v] of va) if (!vn.has(id)) out.push({ tipo: "evento", texto: `🗑️ Borró el evento: ${(v as any).titulo}` });
+  return out.slice(0, 40);
+}
+
+// Recordatorios de Dino. 14:10: lo de mañana. 19:00: lo que sigue sin resolver y vence en las próximas 48 horas.
+function armarRecordatorio(turno: string, agenda: any, hoy: string) {
+  const tareas = (agenda.tareas ?? []).filter((t: any) => !t.hecha && t.fecha);
+  const examenes = (agenda.examenes ?? []).filter((e: any) => e.fecha && e.nota == null);
+  const linea = (t: any) => `• ${t.materia ? t.materia + ": " : ""}${t.titulo}${t.en_curso ? " (en curso)" : ""}`;
+  const lineaEx = (e: any) => `• Examen${e.materia ? " de " + e.materia : ""}: ${e.tema}`;
+  if (turno === "1410") {
+    const manana = sumarDias(hoy, 1);
+    const t = tareas.filter((x: any) => x.fecha === manana), e = examenes.filter((x: any) => x.fecha === manana);
+    if (!t.length && !e.length) return { titulo: "🦖 Dino: para mañana", texto: "Para mañana no tenés nada anotado 🎉 ¿Anotaste todo lo que te dieron hoy?" };
+    return { titulo: `🦖 Dino: para mañana (${diaDe(manana)})`, texto: [...e.map(lineaEx), ...t.map(linea)].join("\n") };
+  }
+  const limite = sumarDias(hoy, 2);
+  const t = tareas.filter((x: any) => x.fecha <= limite), e = examenes.filter((x: any) => x.fecha >= hoy && x.fecha <= limite);
+  if (!t.length && !e.length) return null;
+  const atrasadas = t.filter((x: any) => x.fecha < hoy).length;
+  return { titulo: `🦖 Dino: te falta resolver ${t.length + e.length} cosa${t.length + e.length === 1 ? "" : "s"}`, texto: [...e.map(lineaEx), ...t.map(linea)].join("\n") + (atrasadas ? `\n(${atrasadas} ya está${atrasadas === 1 ? "" : "n"} atrasada${atrasadas === 1 ? "" : "s"})` : "") };
+}
+
+async function mandarRecordatorios(turno: string) {
+  const hoy = hoyAR();
+  const { data: agendas } = await db.from("dulce_agenda").select("familia_id,datos");
+  let enviados = 0;
+  for (const a of agendas ?? []) {
+    const { error } = await db.from("dulce_recordatorios").insert({ familia_id: a.familia_id, dia: hoy, turno });
+    if (error) continue;
+    const r = armarRecordatorio(turno, a.datos ?? {}, hoy);
+    if (r) enviados += await avisar(a.familia_id, "chica", { ...r, ir: "tareas", tag: "dino-" + turno });
+  }
+  return enviados;
+}
+
 const icsTexto = (t: string) => t.replace(/[\\;,]/g, c => "\\" + c).replace(/\r?\n/g, "\\n");
 const masUnDia = (f: string) => { const d = new Date(f + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10).replace(/-/g, ""); };
 function armarIcs(nombre: string, agenda: any, actualizado: string) {
@@ -114,23 +202,31 @@ async function preguntarDino(familia: { id: string; nombre: string | null }, bod
     ...historial,
     { role: "user", content: imagen ? [{ type: "text", text: pregunta }, { type: "image_url", image_url: { url: imagen } }] : pregunta },
   ];
-  const pedir = (model: string) => fetch(GROQ_URL, {
+  const pedir = (model: string, url = GROQ_URL, clave = env.GROQ_API_KEY) => fetch(url, {
     method: "POST",
-    headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${clave}`, "Content-Type": "application/json" },
     body: JSON.stringify(imagen
       ? { model, messages, temperature: 0.5, max_tokens: 900 }
       : { model, messages, temperature: 0.5, max_tokens: 1500, tools: HERRAMIENTAS, tool_choice: "auto" }),
     signal: AbortSignal.timeout(45000),
-  });
+  }).catch(e => { console.error("agenda-dulce sin respuesta", url === GROQ_URL ? "groq" : "openrouter", String(e)); return null; });
   let r = await pedir(imagen ? visionActual : MODELO);
-  if (imagen && (r.status === 404 || r.status === 400)) {
+  if (imagen && r && (r.status === 404 || r.status === 400)) {
     const otro = await buscarModeloVision();
     if (otro && otro !== visionActual) { console.warn(`agenda-dulce: ${visionActual} no anda, paso a ${otro}`); visionActual = otro; r = await pedir(otro); }
   }
-  const data = await r.json().catch(() => null);
-  if (!r.ok) {
-    console.error("agenda-dulce IA", r.status, JSON.stringify(data).slice(0, 400));
-    return { error: r.status === 429 ? "ocupado" : "ia", detalle: r.status };
+  let data = r ? await r.json().catch(() => null) : null;
+  if (!r?.ok) {
+    const estado = r?.status ?? 0;
+    if (r) console.error("agenda-dulce IA", estado, JSON.stringify(data).slice(0, 400));
+    // Respaldo: OpenRouter, solo si está cargado OPENROUTER_API_KEY y Groq falló por cupo, caída o falta de respuesta.
+    if (env.OPENROUTER_API_KEY && (estado === 0 || estado === 429 || estado >= 500)) {
+      const ro = await pedir(imagen ? (env.DINO_MODELO_VISION_OR || "google/gemini-2.5-flash") : (env.DINO_MODELO_OR || "openai/gpt-oss-120b"), OPENROUTER_URL, env.OPENROUTER_API_KEY);
+      const dro = ro ? await ro.json().catch(() => null) : null;
+      if (ro?.ok) { console.warn(`agenda-dulce: groq ${estado} → openrouter`); r = ro; data = dro; }
+      else console.error("agenda-dulce OpenRouter", ro?.status ?? 0, JSON.stringify(dro).slice(0, 300));
+    }
+    if (!r?.ok) return { error: estado === 429 ? "ocupado" : "ia", detalle: estado };
   }
   const m = data?.choices?.[0]?.message ?? {};
   const acciones = (m.tool_calls ?? []).map((t: any) => {
@@ -151,6 +247,13 @@ Deno.serve(async req => {
   }
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
   const body = await req.json().catch(() => ({}));
+  const secreto = req.headers.get("x-trabajador-secreto");
+  if (secreto && body.accion === "recordatorio") {
+    const { data: valido } = await db.rpc("trabajador_secreto_valido", { p_secreto: secreto });
+    if (!valido) return json({ error: "secreto" }, 401);
+    const turno = body.turno === "1900" ? "1900" : "1410";
+    return json({ turno, enviados: await mandarRecordatorios(turno) });
+  }
   const familia = await familiaDe(body.codigo);
   if (!familia) return json({ error: "codigo" }, 401);
 
@@ -172,6 +275,7 @@ Deno.serve(async req => {
         if (!t) return json({ error: "Mensaje vacío" }, 400);
         const { data, error } = await db.from("dulce_mensajes").insert({ familia_id: familia.id, de, texto: t }).select("id,de,texto,leido,creado").single();
         if (error) throw error;
+        await avisar(familia.id, de === "mama" ? "chica" : "mama", { titulo: de === "mama" ? "💬 Mamá" : `💬 ${familia.nombre || "Valentina"}`, texto: t.slice(0, 200), ir: "chat", tag: "chat" });
         return json({ mensaje: data });
       }
       case "leidos": {
@@ -180,8 +284,45 @@ Deno.serve(async req => {
         return json({ ok: true });
       }
       case "sincronizar": {
-        const { error } = await db.from("dulce_agenda").upsert({ familia_id: familia.id, datos: limpiarAgenda(body.datos), actualizado: new Date().toISOString() });
+        const datos = limpiarAgenda(body.datos);
+        const { data: previa } = await db.from("dulce_agenda").select("datos").eq("familia_id", familia.id).maybeSingle();
+        const { error } = await db.from("dulce_agenda").upsert({ familia_id: familia.id, datos, actualizado: new Date().toISOString() });
         if (error) throw error;
+        const novs = previa ? novedadesEntre(previa.datos ?? {}, datos) : [{ tipo: "conexion", texto: `🔗 ${familia.nombre || "Valentina"} conectó su agenda` }];
+        if (novs.length) {
+          await db.from("dulce_novedades").insert(novs.map(n => ({ familia_id: familia.id, ...n })));
+          const nom = familia.nombre || "Valentina";
+          await avisar(familia.id, "mama", novs.length === 1
+            ? { titulo: `🔔 ${nom}`, texto: novs[0].texto, ir: "novedades", tag: "novedades" }
+            : { titulo: `🔔 ${nom}: ${novs.length} cambios`, texto: novs.slice(0, 4).map(n => n.texto).join("\n") + (novs.length > 4 ? "\n…" : ""), ir: "novedades", tag: "novedades" });
+        }
+        return json({ ok: true, novedades: novs.length });
+      }
+      case "novedades": {
+        const desde = Number(body.desde) || 0;
+        let q = db.from("dulce_novedades").select("id,tipo,texto,leida,creado").eq("familia_id", familia.id);
+        q = desde ? q.gt("id", desde).order("id").limit(200) : q.order("id", { ascending: false }).limit(150);
+        const { data, error } = await q;
+        if (error) throw error;
+        return json({ novedades: desde ? data : (data ?? []).reverse() });
+      }
+      case "novedades-leidas": {
+        await db.from("dulce_novedades").update({ leida: true }).eq("familia_id", familia.id).eq("leida", false);
+        return json({ ok: true });
+      }
+      case "push-clave":
+        return json({ clave: env.VAPID_PUBLIC_KEY ?? null });
+      case "suscribir": {
+        const s = body.sub;
+        if (typeof s?.endpoint !== "string" || !/^https:\/\//.test(s.endpoint) || typeof s?.keys?.p256dh !== "string" || typeof s?.keys?.auth !== "string") return json({ error: "Suscripción inválida" }, 400);
+        const quien = body.de === "mama" ? "mama" : "chica";
+        const { error } = await db.from("dulce_push").upsert({ familia_id: familia.id, quien, endpoint: s.endpoint.slice(0, 1000), p256dh: s.keys.p256dh.slice(0, 200), auth: s.keys.auth.slice(0, 100), activo: true }, { onConflict: "endpoint" });
+        if (error) throw error;
+        if (body.probar) await avisar(familia.id, quien, { titulo: "🦖 ¡Listo!", texto: quien === "mama" ? "Te voy a avisar cuando Valentina cambie algo de sus tareas y exámenes." : "Te aviso todos los días a las 14:10 y a las 19:00 lo que tenés que hacer.", tag: "prueba" });
+        return json({ ok: true });
+      }
+      case "desuscribir": {
+        if (typeof body.endpoint === "string") await db.from("dulce_push").update({ activo: false }).eq("familia_id", familia.id).eq("endpoint", body.endpoint);
         return json({ ok: true });
       }
       case "agenda": {
