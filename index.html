@@ -195,9 +195,10 @@ a.btn.primario{color:var(--en-boton)}
 .total-receta{background:var(--verde-soft);color:var(--verde);border-radius:12px;padding:9px 12px;font-weight:700;margin:6px 0 11px}
 .pasos{white-space:pre-wrap;font-size:14px;color:var(--muted);margin-top:6px}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
-body.mama #app{padding-bottom:12px}
+body.mama #app{height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 body.mama nav.abajo{display:none}
-body.mama .chat{height:calc(100dvh - 140px - env(safe-area-inset-bottom))}
+body.mama .chat{flex:1;height:auto;min-height:0}
+body.mama .cards{overflow-y:auto;min-height:0}
 @media (max-width:380px){.cifra b{font-size:15px}.rapidos button{font-size:11.5px}nav.abajo button{font-size:10.5px}}
 
 /* compu */
