@@ -4,8 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mi Agenda Dulce</title>
+<meta name="description" content="Colegio, calendario, Dino y mi emprendimiento de budines">
 <meta name="theme-color" content="#fbf6f0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi Agenda">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -15,6 +21,7 @@
   --verde:#24865a; --verde-soft:#dcf2e6; --ambar:#b5700c; --ambar-soft:#fcefd8;
   --rojo:#c8402f; --rojo-soft:#fbe3e0; --violeta:#7c4fcc; --violeta-soft:#efe6fd;
   --sombra:0 1px 2px rgba(60,30,40,.06),0 4px 14px rgba(60,30,40,.06);
+  --en-boton:#fff;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
@@ -23,7 +30,7 @@
     --rosa:#ff7ea6; --rosa-soft:#3d2230; --azul:#8ea3ff; --azul-soft:#232a48;
     --verde:#6fd3a0; --verde-soft:#1b3328; --ambar:#f0b55a; --ambar-soft:#3a2c15;
     --rojo:#ff8f80; --rojo-soft:#3e2220; --violeta:#bb9cff; --violeta-soft:#2f2545;
-    --sombra:0 1px 2px rgba(0,0,0,.3); color-scheme:dark;
+    --sombra:0 1px 2px rgba(0,0,0,.3); --en-boton:#2b1420; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
@@ -31,128 +38,209 @@
   --rosa:#ff7ea6; --rosa-soft:#3d2230; --azul:#8ea3ff; --azul-soft:#232a48;
   --verde:#6fd3a0; --verde-soft:#1b3328; --ambar:#f0b55a; --ambar-soft:#3a2c15;
   --rojo:#ff8f80; --rojo-soft:#3e2220; --violeta:#bb9cff; --violeta-soft:#2f2545;
-  --sombra:0 1px 2px rgba(0,0,0,.3); color-scheme:dark;
+  --sombra:0 1px 2px rgba(0,0,0,.3); --en-boton:#2b1420; color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.4 Nunito,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
-#app{max-width:560px;margin:0 auto;padding:16px 16px 96px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-header h1{font-size:22px;margin:0;font-weight:800}
-header small{color:var(--muted);display:block;font-weight:600}
-.icono{border:0;background:var(--card);box-shadow:var(--sombra);width:42px;height:42px;border-radius:14px;font-size:20px;cursor:pointer}
-.tarjeta{background:var(--card);border-radius:20px;box-shadow:var(--sombra);padding:16px;margin-bottom:14px}
-.tarjeta h2{font-size:17px;margin:0 0 10px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.tarjeta h2 .mini{font-size:14px}
-.sub{color:var(--muted);font-size:14px}
-.vacio{color:var(--muted);font-size:14px;padding:6px 0}
-.pestanas{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 14px;padding:2px 16px 4px;scrollbar-width:none}
+#app{max-width:560px;margin:0 auto;padding:12px 14px 84px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+header h1{font-size:21px;margin:0;font-weight:800;line-height:1.15}
+header small{color:var(--muted);display:block;font-weight:600;font-size:13px}
+.icono{border:0;background:var(--card);box-shadow:var(--sombra);width:40px;height:40px;border-radius:13px;font-size:19px;cursor:pointer;flex:none}
+.cards{display:block}
+.tarjeta{background:var(--card);border-radius:18px;box-shadow:var(--sombra);padding:13px 14px;margin-bottom:10px}
+.tarjeta h2{font-size:16px;margin:0 0 6px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tarjeta h2 .mini{font-size:13px}
+.sub{color:var(--muted);font-size:13px}
+.vacio{color:var(--muted);font-size:14px;padding:4px 0;margin:0}
+.pestanas{display:flex;gap:6px;overflow-x:auto;margin:0 -14px 10px;padding:2px 14px 4px;scrollbar-width:none}
 .pestanas::-webkit-scrollbar{display:none}
-.pestana{flex:none;border:0;border-radius:999px;padding:8px 14px;background:var(--card);box-shadow:var(--sombra);font-weight:700;cursor:pointer}
+.pestana{flex:none;border:0;border-radius:999px;padding:7px 13px;background:var(--card);box-shadow:var(--sombra);font-weight:700;cursor:pointer;font-size:14px;position:relative}
 .pestana.activa{background:var(--ink);color:var(--bg)}
-nav.abajo{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));z-index:5}
-nav.abajo div{display:flex;max-width:560px;width:100%}
-nav.abajo button{flex:1;border:0;background:none;padding:6px 2px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
-nav.abajo button span{font-size:22px;line-height:1}
+nav.abajo{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:5px 6px calc(5px + env(safe-area-inset-bottom));z-index:5}
+nav.abajo .marca{display:none}
+nav.abajo .botonera{display:flex;max-width:560px;width:100%}
+nav.abajo button{flex:1;border:0;background:none;padding:5px 2px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:700;font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:1px;position:relative}
+nav.abajo button span{font-size:21px;line-height:1}
 nav.abajo button.activa{color:var(--rosa);background:var(--rosa-soft)}
-.fila{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.globo{position:absolute;top:0;right:calc(50% - 22px);background:var(--rojo);color:#fff;font-size:11px;font-weight:800;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+.pestana .globo{top:-6px;right:-4px}
+.fila{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
 .fila:first-of-type{border-top:0}
 .fila .cuerpo{flex:1;min-width:0}
-.fila .titulo{font-weight:700;overflow-wrap:anywhere}
+.fila .titulo{font-weight:700;overflow-wrap:anywhere;font-size:15px}
 .fila .titulo.tachado{text-decoration:line-through;color:var(--muted)}
 .tocable{cursor:pointer}
 .check{flex:none;width:26px;height:26px;border-radius:9px;border:2px solid var(--line);background:var(--inset);cursor:pointer;display:grid;place-items:center;font-size:15px;color:#fff;padding:0}
 .check.si{background:var(--verde);border-color:var(--verde)}
 .punto{flex:none;width:10px;height:10px;border-radius:50%;display:inline-block}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--inset);white-space:nowrap}
-.chip.rosa{background:var(--rosa-soft);color:var(--rosa)}
-.chip.azul{background:var(--azul-soft);color:var(--azul)}
-.chip.verde{background:var(--verde-soft);color:var(--verde)}
-.chip.ambar{background:var(--ambar-soft);color:var(--ambar)}
-.chip.rojo{background:var(--rojo-soft);color:var(--rojo)}
-.chip.violeta{background:var(--violeta-soft);color:var(--violeta)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--inset);white-space:nowrap}
+.chip.rosa{background:var(--rosa-soft);color:var(--rosa)} .chip.azul{background:var(--azul-soft);color:var(--azul)}
+.chip.verde{background:var(--verde-soft);color:var(--verde)} .chip.ambar{background:var(--ambar-soft);color:var(--ambar)}
+.chip.rojo{background:var(--rojo-soft);color:var(--rojo)} .chip.violeta{background:var(--violeta-soft);color:var(--violeta)}
 button.chip{border:0;cursor:pointer}
-.btn{border:0;border-radius:14px;padding:11px 16px;font-weight:800;cursor:pointer;background:var(--inset)}
-.btn.primario{background:var(--rosa);color:#fff}
-:root[data-theme="dark"] .btn.primario{color:#2b1420}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primario{color:#2b1420}}
+.btn{border:0;border-radius:13px;padding:10px 15px;font-weight:800;cursor:pointer;background:var(--inset);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primario{background:var(--rosa);color:var(--en-boton)}
 .btn.peligro{background:var(--rojo-soft);color:var(--rojo)}
-.btn.chico{padding:7px 12px;font-size:14px;border-radius:11px}
+.btn.chico{padding:6px 11px;font-size:13.5px;border-radius:10px}
 .btn.ancho{width:100%}
 .botones{display:flex;flex-wrap:wrap;gap:8px}
-.rapidos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.rapidos button{border:0;background:var(--card);box-shadow:var(--sombra);border-radius:16px;padding:10px 4px;font-weight:700;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
-.rapidos button span{font-size:22px}
+.barra-acciones{display:flex;gap:8px;margin-bottom:10px}
+.barra-acciones .btn{flex:1}
+.rapidos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.rapidos button{border:0;background:var(--card);box-shadow:var(--sombra);border-radius:15px;padding:8px 4px;font-weight:700;font-size:12.5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.rapidos button span{font-size:20px}
 .cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.cifra{background:var(--inset);border-radius:14px;padding:10px}
-.cifra b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.cifra{background:var(--inset);border-radius:13px;padding:8px 10px}
+.cifra b{display:block;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 .cifra small{color:var(--muted);font-weight:700;font-size:12px}
 .cifra.verde b{color:var(--verde)} .cifra.rosa b{color:var(--rosa)}
 .monto{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.aviso{background:var(--ambar-soft);color:var(--ambar);border-radius:14px;padding:10px 12px;font-size:14px;font-weight:600;margin-bottom:12px}
-.ok{background:var(--verde-soft);color:var(--verde)}
-.cal-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.cal-cab b{font-size:18px;text-transform:capitalize}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.cal .dsem{font-size:12px;color:var(--muted);font-weight:700;padding-bottom:4px}
-.cal button{border:0;background:var(--inset);border-radius:12px;aspect-ratio:1;padding:2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:700;min-width:0}
+.aviso{background:var(--ambar-soft);color:var(--ambar);border-radius:13px;padding:9px 12px;font-size:14px;font-weight:600;margin-bottom:10px}
+.instalar{max-width:760px;display:flex;align-items:center;gap:12px;background:var(--violeta-soft);color:var(--ink);border-radius:16px;padding:10px 12px;margin-bottom:10px}
+.instalar img{width:44px;height:44px;border-radius:11px;flex:none}
+.instalar div{flex:1;font-size:14px;font-weight:600}
+.instalar b{display:block;font-size:15px}
+.hoy-cole{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px;color:var(--muted);font-weight:700}
+.cal-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-cab b{font-size:17px;text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal .dsem{font-size:12px;color:var(--muted);font-weight:700;padding-bottom:2px}
+.cal button{border:0;background:var(--inset);border-radius:10px;height:42px;padding:2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:700;min-width:0;font-size:14px}
 .cal button.fuera{opacity:.35}
 .cal button.hoy{outline:2px solid var(--rosa)}
 .cal button.sel{background:var(--ink);color:var(--bg)}
 .cal .puntos{display:flex;gap:2px;height:6px}
 .cal .puntos i{width:6px;height:6px;border-radius:50%}
-.leyenda{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);margin-top:10px}
+.leyenda{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--muted);margin-top:8px}
 .leyenda span{display:inline-flex;align-items:center;gap:5px}
-.horario{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.horario .dia{background:var(--inset);border-radius:12px;padding:6px;min-width:0}
+.horario{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.horario .dia{background:var(--inset);border-radius:11px;padding:5px;min-width:0}
 .horario .dia b{display:block;text-align:center;font-size:13px;margin-bottom:4px}
 .horario .dia.hoy{outline:2px solid var(--rosa)}
-.horario .mat{display:block;width:100%;border:0;border-radius:8px;padding:4px 2px;font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.horario .mas{display:block;width:100%;border:1px dashed var(--muted);background:none;border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted)}
-.barras{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:6px}
+.horario .mat{display:block;width:100%;border:0;border-radius:7px;padding:4px 2px;font-size:11px;font-weight:700;color:#fff;margin-bottom:3px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.horario .mas{display:block;width:100%;border:1px dashed var(--muted);background:none;border-radius:7px;font-size:13px;cursor:pointer;color:var(--muted)}
+.barras{display:flex;align-items:flex-end;gap:10px;height:110px;padding-top:6px}
 .barras .mes{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
 .barras .par{display:flex;gap:3px;align-items:flex-end;height:100%;width:100%;justify-content:center}
 .barras .par i{display:block;width:40%;max-width:16px;border-radius:5px 5px 2px 2px;min-height:2px}
 .barras small{font-size:12px;color:var(--muted);font-weight:700}
-.receta-costos{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
-.receta-costos div{background:var(--inset);border-radius:10px;padding:6px 9px;font-size:13px}
+.receta-costos{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
+.receta-costos div{background:var(--inset);border-radius:10px;padding:5px 9px;font-size:12.5px}
 .receta-costos b{display:block;font-size:15px}
 .stepper{display:flex;align-items:center;gap:4px}
 .stepper button{width:28px;height:28px;border-radius:9px;border:0;background:var(--inset);font-weight:800;cursor:pointer}
 .stepper span{min-width:20px;text-align:center;font-weight:800}
-.precio-in{width:84px;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);text-align:right}
+.precio-in{width:80px;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);text-align:right}
+.archivos{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.archivo{border:0;background:var(--inset);border-radius:13px;padding:0;overflow:hidden;cursor:pointer;text-align:left;display:flex;flex-direction:column;min-width:0}
+.archivo .vista{aspect-ratio:1;display:grid;place-items:center;font-size:34px;background:var(--line);position:relative}
+.archivo .vista img{width:100%;height:100%;object-fit:cover;display:block}
+.archivo .vista .punto{position:absolute;top:7px;left:7px;box-shadow:0 0 0 2px #fff}
+.archivo .nom{font-size:12px;font-weight:700;padding:5px 7px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* chat */
+.chat{display:flex;flex-direction:column;height:calc(100dvh - 176px - env(safe-area-inset-bottom));min-height:320px;background:var(--card);border-radius:18px;box-shadow:var(--sombra);overflow:hidden}
+.chat-lista{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msj{max-width:84%;padding:8px 12px;border-radius:16px;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
+.msj.yo{align-self:flex-end;background:var(--rosa);color:var(--en-boton);border-bottom-right-radius:5px}
+.msj.otro{align-self:flex-start;background:var(--inset);border-bottom-left-radius:5px}
+.msj .hora{display:block;font-size:11px;opacity:.75;text-align:right;margin-top:2px}
+.msj img.foto{display:block;max-width:100%;max-height:220px;border-radius:10px;margin-bottom:6px}
+.msj ul{margin:4px 0;padding-left:20px}
+.fila-dino{display:flex;gap:8px;align-items:flex-end;align-self:flex-start;max-width:90%}
+.fila-dino img.av{width:30px;height:30px;border-radius:9px;flex:none}
+.fila-dino .msj{max-width:100%}
+.accion{background:var(--card);border-radius:12px;padding:8px 10px;margin-top:6px;font-size:14px;font-weight:700;display:flex;flex-direction:column;gap:6px}
+.pensando span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin:0 2px;animation:salto 1s infinite}
+.pensando span:nth-child(2){animation-delay:.15s}.pensando span:nth-child(3){animation-delay:.3s}
+@keyframes salto{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.sugerencias{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:none}
+.sugerencias::-webkit-scrollbar{display:none}
+.sugerencias button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 11px;font-size:13px;font-weight:700;cursor:pointer}
+.escribir{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);align-items:flex-end}
+.escribir textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--inset);border-radius:18px;padding:9px 13px;max-height:120px;min-height:40px;outline:none;font-size:15px}
+.escribir textarea:focus{border-color:var(--rosa)}
+.escribir button{flex:none;width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;font-size:18px;background:var(--inset)}
+.escribir button.enviar{background:var(--rosa);color:var(--en-boton)}
+.adjunto{display:flex;align-items:center;gap:8px;padding:6px 12px 0;font-size:13px;color:var(--muted);font-weight:700}
+.adjunto img{height:44px;border-radius:8px}
+.adjunto button{border:0;background:var(--rojo-soft);color:var(--rojo);border-radius:8px;cursor:pointer;padding:3px 8px}
+.chat-vacio{margin:auto;text-align:center;color:var(--muted);font-size:14px;max-width:300px}
+.chat-vacio img{width:84px;height:84px;border-radius:20px;display:block;margin:0 auto 8px}
+/* modal */
 #modal{position:fixed;inset:0;background:rgba(20,10,16,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10}
 #modal[hidden]{display:none}
-.sheet{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
 .sheet h2{margin:0 0 12px;font-size:19px}
-.campo{display:block;margin-bottom:12px}
+.sheet img.previa{display:block;max-width:100%;max-height:240px;border-radius:12px;margin:0 auto 12px}
+.campo{display:block;margin-bottom:11px}
 .campo span{display:block;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:4px}
-.campo input,.campo select,.campo textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--inset);outline:none}
+.campo input,.campo select,.campo textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--inset);outline:none}
 .campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--rosa)}
-.campo textarea{min-height:90px;resize:vertical}
+.campo textarea{min-height:80px;resize:vertical}
 .campo.tilde{display:flex;align-items:center;gap:10px}
 .campo.tilde input{width:22px;height:22px}
 .campo.tilde span{margin:0;color:var(--ink)}
-.ayuda{font-size:13px;color:var(--muted);margin:-6px 0 12px}
+.ayuda{font-size:13px;color:var(--muted);margin:-5px 0 11px}
 .acciones{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
 .acciones .izq{margin-right:auto}
-.item-receta{display:grid;grid-template-columns:1fr 78px 34px 30px;gap:6px;align-items:center;margin-bottom:6px}
-.item-receta select,.item-receta input{padding:9px 8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);width:100%;min-width:0}
+.item-receta{display:grid;grid-template-columns:1fr 74px 30px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.item-receta select,.item-receta input{padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);width:100%;min-width:0}
 .item-receta .u{font-size:13px;color:var(--muted);font-weight:700}
 .item-receta button{border:0;background:var(--rojo-soft);color:var(--rojo);border-radius:9px;height:30px;cursor:pointer}
-.total-receta{background:var(--verde-soft);color:var(--verde);border-radius:12px;padding:10px 12px;font-weight:700;margin:6px 0 12px}
-.pasos{white-space:pre-wrap;font-size:14px;color:var(--muted);margin-top:8px}
-.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
-@media (max-width:380px){.cifra b{font-size:16px}.rapidos button{font-size:12px}}
+.total-receta{background:var(--verde-soft);color:var(--verde);border-radius:12px;padding:9px 12px;font-weight:700;margin:6px 0 11px}
+.pasos{white-space:pre-wrap;font-size:14px;color:var(--muted);margin-top:6px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
+body.mama #app{padding-bottom:12px}
+body.mama nav.abajo{display:none}
+body.mama .chat{height:calc(100dvh - 90px)}
+@media (max-width:380px){.cifra b{font-size:15px}.rapidos button{font-size:11.5px}nav.abajo button{font-size:10.5px}}
+
+/* compu */
+@media (min-width:900px){
+  body{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+  nav.abajo{position:sticky;top:0;grid-column:1;grid-row:1;height:100vh;border-top:0;border-right:1px solid var(--line);flex-direction:column;justify-content:flex-start;padding:22px 14px;gap:18px}
+  nav.abajo .marca{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;line-height:1.1}
+  nav.abajo .marca img{width:46px;height:46px;border-radius:12px}
+  nav.abajo .botonera{flex-direction:column;gap:4px}
+  nav.abajo button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;font-size:15px;padding:10px 12px}
+  nav.abajo button span{font-size:20px}
+  nav.abajo .globo{position:static;margin-left:auto}
+  #app{grid-column:2;grid-row:1;max-width:1120px;width:100%;margin:0;padding:24px 32px 32px}
+  header{margin-bottom:16px}
+  header h1{font-size:26px}
+  .pestanas{margin:0 0 14px;padding:2px}
+  .cards{columns:2;column-gap:16px}
+  .cards>*{break-inside:avoid}
+  .tarjeta{padding:16px 18px;margin-bottom:16px}
+  .rapidos{grid-template-columns:repeat(4,minmax(0,170px))}
+  .barra-acciones{max-width:520px}
+  .cal button{height:62px;font-size:15px}
+  .chat{height:calc(100vh - 150px)}
+  .msj{max-width:68%}
+  #modal{align-items:center}
+  .sheet{border-radius:22px;max-height:88vh}
+  .toast{bottom:28px}
+  body.mama{display:block}
+  body.mama #app{max-width:760px;margin:0 auto}
+}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<nav class="abajo"><div id="nav"></div></nav>
+<nav class="abajo"><div class="marca"><img src="icono-192.png" alt="">Mi Agenda<br>Dulce</div><div class="botonera" id="nav"></div></nav>
 <div id="modal" hidden></div>
+<input type="file" id="subir-archivo" accept="image/*,application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.odt" multiple hidden>
+<input type="file" id="subir-foto" accept="image/*" capture="environment" hidden>
+<input type="file" id="dino-foto" accept="image/*" hidden>
 <script>
 const KEY = 'agenda-dulce-v1';
+const KEY_FAMILIA = 'agenda-dulce-familia';
+const KEY_DINO = 'agenda-dulce-dino';
+const KEY_CHAT = 'agenda-dulce-chat';
+const API = 'https://itultpcdafpxpgtblgfb.supabase.co/functions/v1/agenda-dulce';
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -160,6 +248,7 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 const COLORES = [['#e0527a', 'Rosa'], ['#4f6bd8', 'Azul'], ['#2f9e6b', 'Verde'], ['#c9821a', 'Naranja'], ['#8a5cd6', 'Violeta'], ['#1f9bb0', 'Celeste'], ['#d24b3e', 'Rojo'], ['#6b7a8f', 'Gris']];
 const UNIDADES = [['g', 'gramos (g)'], ['ml', 'mililitros (ml)'], ['u', 'unidades']];
 const TIPOS_EVENTO = [['cumple', '🎂 Cumple'], ['salida', '🎉 Salida'], ['cole', '🏫 Cole'], ['negocio', '🧁 Negocio'], ['otro', '⭐ Otro']];
+const emojiEvento = t => (TIPOS_EVENTO.find(x => x[0] === t) || ['', '⭐'])[1].split(' ')[0];
 
 const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const hoy = () => iso(new Date());
@@ -176,10 +265,13 @@ const cuando = s => {
   if (n < 7) return 'en ' + n + ' días';
   return fechaCorta(s);
 };
+const horaDe = s => new Date(s).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 const plata = n => (n < 0 ? '-$' : '$') + Math.round(Math.abs(n || 0)).toLocaleString('es-AR');
 const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const mesDe = s => s ? s.slice(0, 7) : '';
+const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
+const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
 function semilla() {
   const ingredientes = [
@@ -192,7 +284,7 @@ function semilla() {
   const materias = [['Matemática', 0], ['Lengua', 1], ['Inglés', 2], ['Historia', 3], ['Biología', 4], ['Ed. Física', 5]]
     .map(([nombre, c]) => ({ id: uid(), nombre, color: COLORES[c][0], profe: '' }));
   return {
-    nombre: '', margen: 2.5, ejemplos: true,
+    nombre: 'Valentina', margen: 2.5, ejemplos: true, ocultarInstalar: false,
     materias, horario: { 1: [], 2: [], 3: [], 4: [], 5: [] },
     tareas: [], examenes: [], eventos: [],
     ingredientes,
@@ -210,14 +302,46 @@ function semilla() {
   };
 }
 
-let S;
-try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
+let S = leer(KEY, null);
 if (!S || typeof S !== 'object') S = semilla();
 S = Object.assign(semilla(), S);
+let timerSync;
+const guardarTodo = () => {
+  escribir(KEY, S);
+  if (fam.codigo && !esMama()) { clearTimeout(timerSync); timerSync = setTimeout(sincronizar, 2500); }
+};
+async function sincronizar() {
+  try {
+    await api('sincronizar', { datos: {
+      tareas: S.tareas.map(t => ({ id: t.id, titulo: t.titulo, materia: materia(t.materiaId)?.nombre || '', fecha: t.fecha, hecha: !!t.hecha })),
+      examenes: S.examenes.map(e => ({ id: e.id, materia: materia(e.materiaId)?.nombre || '', tema: e.tema, fecha: e.fecha, nota: e.nota === '' || e.nota == null ? null : num(e.nota) })),
+      eventos: S.eventos.map(e => ({ id: e.id, titulo: e.titulo, fecha: e.fecha, tipo: e.tipo }))
+    } });
+  } catch (e) {}
+}
 
-const guardarTodo = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+/* familia: el link de conexión trae #familia=CODIGO&quien=mama|chica */
+let fam = leer(KEY_FAMILIA, {});
+(() => {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('familia')) {
+    fam = { codigo: h.get('familia'), quien: h.get('quien') === 'mama' ? 'mama' : 'chica' };
+    escribir(KEY_FAMILIA, fam);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+})();
+const esMama = () => fam.quien === 'mama';
+const yo = () => esMama() ? 'mama' : 'chica';
 
-const ui = { vista: 'inicio', colegio: 'tareas', negocio: 'super', calMes: hoy().slice(0, 7), calDia: hoy(), finMes: hoy().slice(0, 7), verHechas: false };
+async function api(accion, datos = {}) {
+  if (!fam.codigo) throw Object.assign(new Error('sin-codigo'), { sinCodigo: true });
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accion, codigo: fam.codigo, ...datos }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.error || 'http ' + r.status), { status: r.status });
+  return j;
+}
+
+const ui = { mama: 'chat', vista: esMama() ? 'chat' : 'inicio', colegio: 'tareas', negocio: 'super', chat: 'dino', calMes: hoy().slice(0, 7), calDia: hoy(), finMes: hoy().slice(0, 7), verHechas: false, archMateria: '' };
 
 const materia = id => S.materias.find(m => m.id === id);
 const ingrediente = id => S.ingredientes.find(i => i.id === id);
@@ -241,6 +365,10 @@ function resumenMes(mes) {
   const gastado = S.gastos.filter(g => mesDe(g.fecha) === mes).reduce((s, g) => s + num(g.monto), 0);
   return { ganado, gastado, ganancia: ganado - gastado, porCobrar, ventas };
 }
+const promedioMateria = id => {
+  const notas = S.examenes.filter(e => e.materiaId === id && e.nota !== '' && e.nota != null).map(e => num(e.nota));
+  return notas.length ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
+};
 
 function avisar(texto) {
   const t = document.createElement('div');
@@ -248,6 +376,53 @@ function avisar(texto) {
   t.textContent = texto;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2400);
+}
+
+/* ---------- archivos del cole (IndexedDB, quedan en el aparato) ---------- */
+const idb = (() => {
+  let p;
+  const abrir = () => p || (p = new Promise((ok, mal) => {
+    const r = indexedDB.open('agenda-dulce', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('archivos', { keyPath: 'id' });
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => mal(r.error);
+  }));
+  const tx = async (modo, fn) => {
+    const d = await abrir();
+    return new Promise((ok, mal) => {
+      const t = d.transaction('archivos', modo);
+      const req = fn(t.objectStore('archivos'));
+      t.oncomplete = () => ok(req?.result);
+      t.onerror = () => mal(t.error);
+    });
+  };
+  return { todos: () => tx('readonly', s => s.getAll()), poner: a => tx('readwrite', s => s.put(a)), sacar: id => tx('readwrite', s => s.delete(id)) };
+})();
+let archivos = [];
+const urls = new Map();
+const urlDe = a => { if (!urls.has(a.id)) urls.set(a.id, URL.createObjectURL(a.blob)); return urls.get(a.id); };
+const esImagen = a => /^image\//.test(a.tipo);
+const iconoArchivo = a => /pdf/.test(a.tipo) ? '📕' : /word|document|odt/.test(a.tipo + a.nombre) ? '📘' : /sheet|excel|xls/.test(a.tipo + a.nombre) ? '📗' : /presentation|ppt/.test(a.tipo + a.nombre) ? '📙' : '📄';
+idb.todos().then(a => { archivos = a || []; if (ui.vista === 'colegio') render(); }).catch(() => {});
+
+async function guardarArchivos(lista) {
+  let n = 0;
+  for (const f of lista) {
+    if (f.size > 25 * 1024 * 1024) { avisar(f.name + ' es muy pesado (máx. 25 MB)'); continue; }
+    const a = { id: uid(), nombre: f.name || 'foto.jpg', tipo: f.type, tamano: f.size, materiaId: ui.archMateria, nota: '', fecha: hoy(), blob: f };
+    try { await idb.poner(a); archivos.push(a); n++; } catch (e) { avisar('No pude guardar ' + a.nombre); }
+  }
+  if (n) avisar(n === 1 ? 'Guardado 📎' : n + ' archivos guardados 📎');
+  render();
+}
+async function achicarImagen(blob, max = 1280) {
+  const bmp = await createImageBitmap(blob);
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k);
+  c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.82);
 }
 
 /* ---------- formularios ---------- */
@@ -263,17 +438,17 @@ function campoHTML(c, v) {
   const extra = c.tipo === 'numero' ? 'inputmode="decimal" step="any" min="0"' : '';
   return `<label class="campo"><span>${c.label}</span><input type="${tipo}" name="${c.nombre}" value="${esc(val)}" placeholder="${esc(c.ph || '')}" ${extra} ${c.requerido ? 'required' : ''}></label>${c.ayuda ? `<p class="ayuda">${c.ayuda}</p>` : ''}`;
 }
-function abrirForm({ titulo, campos, valores = {}, guardar, borrar, textoGuardar = 'Guardar' }) {
+function abrirForm({ titulo, campos, valores = {}, guardar, borrar, textoGuardar = 'Guardar', arriba = '', extra = '' }) {
   formActual = { campos, guardar, borrar };
   const m = document.getElementById('modal');
-  m.innerHTML = `<div class="sheet"><h2>${titulo}</h2><form id="f">${campos.map(c => campoHTML(c, valores[c.nombre])).join('')}
-    <div class="acciones">${borrar ? '<button type="button" class="btn peligro izq" data-act="m-borrar">Borrar</button>' : ''}
+  m.innerHTML = `<div class="sheet"><h2>${titulo}</h2>${arriba}<form id="f">${campos.map(c => campoHTML(c, valores[c.nombre])).join('')}
+    <div class="acciones">${borrar ? '<button type="button" class="btn peligro izq" data-act="m-borrar">Borrar</button>' : ''}${extra}
     <button type="button" class="btn" data-act="m-cerrar">Cancelar</button><button class="btn primario">${textoGuardar}</button></div></form></div>`;
   m.hidden = false;
   const primero = m.querySelector('input[type=text],input[type=number]');
-  if (primero && !primero.value) setTimeout(() => primero.focus(), 50);
+  if (primero && !primero.value && matchMedia('(pointer:fine)').matches) setTimeout(() => primero.focus(), 50);
 }
-function cerrarModal() { const m = document.getElementById('modal'); m.hidden = true; m.innerHTML = ''; formActual = null; }
+function cerrarModal() { const m = document.getElementById('modal'); m.hidden = true; m.innerHTML = ''; formActual = null; recetaEdit = null; }
 function leerForm(form) {
   const o = {};
   for (const c of formActual.campos) {
@@ -287,7 +462,7 @@ function leerForm(form) {
 }
 const opcionesMaterias = () => [['', '— elegir —'], ...S.materias.map(m => [m.id, m.nombre])];
 
-/* ---------- acciones de colegio ---------- */
+/* ---------- colegio ---------- */
 function formTarea(t = {}) {
   abrirForm({
     titulo: t.id ? 'Editar tarea' : 'Nueva tarea',
@@ -297,6 +472,7 @@ function formTarea(t = {}) {
       { nombre: 'fecha', label: '¿Para cuándo?', tipo: 'fecha', valor: hoy() }
     ],
     valores: t,
+    extra: t.id ? `<button type="button" class="btn" data-act="tarea-dino" data-id="${t.id}">🦖 Ayuda</button>` : '',
     guardar: o => { if (t.id) Object.assign(t, o); else S.tareas.push({ id: uid(), hecha: false, ...o }); },
     borrar: t.id && (() => { S.tareas = S.tareas.filter(x => x !== t); })
   });
@@ -311,6 +487,7 @@ function formExamen(e = {}) {
       { nombre: 'nota', label: 'Nota (cuando te la den)', tipo: 'numero', ph: 'Ej: 8', ayuda: 'Con las notas calculo solo tu promedio por materia.' }
     ],
     valores: e,
+    extra: e.id ? `<button type="button" class="btn" data-act="examen-dino" data-id="${e.id}">🦖 Estudiar</button>` : '',
     guardar: o => { if (e.id) Object.assign(e, o); else S.examenes.push({ id: uid(), ...o }); },
     borrar: e.id && (() => { S.examenes = S.examenes.filter(x => x !== e); })
   });
@@ -344,8 +521,23 @@ function formEvento(ev = {}) {
     borrar: ev.id && (() => { S.eventos = S.eventos.filter(x => x !== ev); })
   });
 }
+function formArchivo(a) {
+  abrirForm({
+    titulo: 'Archivo del cole',
+    arriba: esImagen(a) ? `<img class="previa" src="${urlDe(a)}" alt="">` : `<p style="font-size:44px;text-align:center;margin:0 0 8px">${iconoArchivo(a)}</p>`,
+    campos: [
+      { nombre: 'nombre', label: 'Nombre', requerido: true },
+      { nombre: 'materiaId', label: 'Materia', tipo: 'select', opciones: opcionesMaterias() },
+      { nombre: 'nota', label: 'Nota', tipo: 'textarea', ph: 'Ej: es la fotocopia para el examen del jueves' }
+    ],
+    valores: a,
+    extra: `<button type="button" class="btn" data-act="arch-abrir" data-id="${a.id}">Abrir</button>${esImagen(a) ? `<button type="button" class="btn" data-act="arch-dino" data-id="${a.id}">🦖 Preguntar</button>` : ''}`,
+    guardar: o => { Object.assign(a, o); idb.poner(a).catch(() => avisar('No pude guardar el cambio')); },
+    borrar: () => { archivos = archivos.filter(x => x !== a); idb.sacar(a.id).catch(() => {}); }
+  });
+}
 
-/* ---------- acciones del negocio ---------- */
+/* ---------- negocio ---------- */
 function formIngrediente(i = {}) {
   abrirForm({
     titulo: i.id ? 'Editar producto del súper' : 'Nuevo producto del súper',
@@ -468,7 +660,6 @@ function formGasto(g = {}) {
   });
 }
 
-/* ---------- editor de recetas ---------- */
 let recetaEdit = null;
 function abrirReceta(r) {
   recetaEdit = r ? JSON.parse(JSON.stringify(r)) : { id: null, nombre: '', rinde: 1, precio: '', pasos: '', items: [{ ingId: S.ingredientes[0]?.id || '', cant: '' }] };
@@ -478,7 +669,6 @@ function abrirReceta(r) {
 }
 function pintarReceta() {
   const r = recetaEdit;
-  const m = document.getElementById('modal');
   const filas = r.items.map((it, k) => {
     const i = ingrediente(it.ingId);
     return `<div class="item-receta">
@@ -487,7 +677,7 @@ function pintarReceta() {
       <span class="u">${i ? unidadCorta(i.unidad) : ''}</span>
       <button type="button" data-act="r-quitar" data-k="${k}" aria-label="Quitar">✕</button></div>`;
   }).join('');
-  m.innerHTML = `<div class="sheet"><h2>${r.id ? 'Editar receta' : 'Nueva receta'}</h2>
+  document.getElementById('modal').innerHTML = `<div class="sheet"><h2>${r.id ? 'Editar receta' : 'Nueva receta'}</h2>
     <label class="campo"><span>Nombre</span><input data-rc="nombre" value="${esc(r.nombre)}" placeholder="Ej: Budín marmolado"></label>
     <label class="campo"><span>¿Cuántas unidades salen?</span><input data-rc="rinde" type="number" inputmode="decimal" min="1" value="${esc(r.rinde)}"></label>
     <div class="campo"><span>Ingredientes (la cantidad que usás)</span>${filas || '<p class="vacio">Todavía no agregaste ingredientes.</p>'}
@@ -502,8 +692,197 @@ function pintarReceta() {
 function pintarTotalReceta() {
   const el = document.getElementById('r-total');
   if (!el) return;
-  const r = recetaEdit;
-  el.innerHTML = `Te cuesta ${plata(costoReceta(r))} hacerla · ${plata(costoUnidad(r))} cada una<br>Precio sugerido: ${plata(precioSugerido(r))} c/u`;
+  el.innerHTML = `Te cuesta ${plata(costoReceta(recetaEdit))} hacerla · ${plata(costoUnidad(recetaEdit))} cada una<br>Precio sugerido: ${plata(precioSugerido(recetaEdit))} c/u`;
+}
+
+/* ---------- Dino ---------- */
+let dino = leer(KEY_DINO, []);
+let dinoPensando = false;
+let dinoAdjunto = null;
+const guardarDino = () => escribir(KEY_DINO, dino.slice(-60).map(({ img, ...m }) => ({ ...m, conFoto: m.conFoto || !!img })));
+
+function contextoDino() {
+  const L = [];
+  const d = new Date();
+  const dia = d.getDay();
+  const manana = (dia + 1) % 7;
+  L.push('Se llama ' + (S.nombre || 'sin nombre') + '.');
+  L.push('Materias: ' + S.materias.map(m => m.nombre + (m.profe ? ' (profe ' + m.profe + ')' : '')).join(', '));
+  L.push('Hoy (' + DIAS_LARGOS[dia] + ') tiene: ' + ((S.horario[dia] || []).map(nombreMat).join(', ') || 'no tiene clases cargadas'));
+  L.push('Mañana (' + DIAS_LARGOS[manana] + ') tiene: ' + ((S.horario[manana] || []).map(nombreMat).join(', ') || 'no tiene clases cargadas'));
+  const pend = pendientes();
+  L.push('Tareas pendientes (' + pend.length + '):');
+  pend.slice(0, 25).forEach(t => L.push(`- ${t.titulo} · ${nombreMat(t.materiaId)} · para ${t.fecha || 'sin fecha'}`));
+  const exs = proxExamenes();
+  L.push('Próximos exámenes:');
+  exs.slice(0, 10).forEach(e => L.push(`- ${nombreMat(e.materiaId)}: ${e.tema} · ${e.fecha} (faltan ${diasHasta(e.fecha)} días)`));
+  const proms = S.materias.map(m => [m.nombre, promedioMateria(m.id)]).filter(x => x[1] != null);
+  if (proms.length) L.push('Promedios: ' + proms.map(([n, p]) => n + ' ' + p.toFixed(1)).join(', '));
+  const evs = S.eventos.filter(e => diasHasta(e.fecha) >= 0 && diasHasta(e.fecha) <= 21);
+  if (evs.length) L.push('Eventos: ' + evs.map(e => e.titulo + ' ' + e.fecha).join('; '));
+  L.push('Archivos del cole guardados: ' + archivos.length);
+  const r = resumenMes(hoy().slice(0, 7));
+  L.push(`Emprendimiento (este mes): ganó ${plata(r.ganado)}, gastó ${plata(r.gastado)}, le quedó ${plata(r.ganancia)}, le deben ${plata(r.porCobrar)}.`);
+  L.push('Recetas: ' + S.recetas.map(x => `${x.nombre} (rinde ${x.rinde}, cuesta ${plata(costoUnidad(x))} c/u, la vende a ${plata(precioReceta(x))})`).join('; '));
+  const pedidos = S.ventas.filter(v => !v.entregado);
+  if (pedidos.length) L.push('Pedidos por entregar: ' + pedidos.map(v => `${v.producto} x${v.cant} a ${v.cliente || 'alguien'} el ${v.fecha}`).join('; '));
+  return L.join('\n');
+}
+
+function respuestaLocal(t) {
+  const x = t.toLowerCase();
+  const lista = (arr, f) => arr.length ? arr.map(f).join('\n') : null;
+  if (/tarea|deber|que tengo que hacer|qué tengo que hacer/.test(x)) {
+    const l = lista(pendientes().slice(0, 8), t => `- **${t.titulo}** (${nombreMat(t.materiaId)}) · ${cuando(t.fecha)}`);
+    return l ? 'Estas son tus tareas pendientes:\n' + l : '¡No tenés tareas pendientes! 🎉';
+  }
+  if (/examen|prueba|evaluaci|estudiar/.test(x)) {
+    const l = lista(proxExamenes().slice(0, 6), e => `- **${nombreMat(e.materiaId)}**: ${e.tema} · faltan ${diasHasta(e.fecha)} días`);
+    return l ? 'Tus próximos exámenes:\n' + l : 'No tenés exámenes anotados.';
+  }
+  if (/plata|gan[eéa]|vend|gast|negocio|cobr/.test(x)) {
+    const r = resumenMes(hoy().slice(0, 7));
+    return `Este mes ganaste **${plata(r.ganado)}**, gastaste **${plata(r.gastado)}** y te quedaron **${plata(r.ganancia)}**.` + (r.porCobrar ? ` Te deben ${plata(r.porCobrar)}.` : '');
+  }
+  if (/hoy|horario|clase|mañana/.test(x)) {
+    const dia = new Date().getDay();
+    return 'Hoy tenés: ' + ((S.horario[dia] || []).map(nombreMat).join(', ') || 'nada cargado en el horario') + '.';
+  }
+  return null;
+}
+
+const SUGERENCIAS_DINO = ['¿Qué tengo que hacer hoy?', 'Ayudame a estudiar para el próximo examen', 'Explicame un ejercicio 📷', 'Armame un plan para esta semana', '¿Cuánto gané este mes?', 'Ideas de sabores nuevos 🧁'];
+
+async function preguntarDino(texto) {
+  texto = texto.trim();
+  if ((!texto && !dinoAdjunto) || dinoPensando) return;
+  const img = dinoAdjunto;
+  dinoAdjunto = null;
+  dino.push({ rol: 'user', texto: texto || '¿Me ayudás con esto?', img, t: Date.now() });
+  dinoPensando = true;
+  pintarChat(true);
+  let resp;
+  try {
+    const historial = dino.slice(-17, -1).map(m => ({ rol: m.rol, texto: m.texto }));
+    const r = await api('dino', { mensaje: texto, historial, contexto: contextoDino(), nombre: S.nombre, imagen: img || undefined });
+    if (r.error) throw Object.assign(new Error(r.error), { ia: true });
+    resp = { texto: r.texto || (r.acciones?.length ? '¡Dale! Te dejo el botón para confirmar 👇' : '🦖 ...'), acciones: (r.acciones || []).map(a => ({ ...a, estado: '' })) };
+  } catch (e) {
+    const local = img ? null : respuestaLocal(texto);
+    const motivo = e.sinCodigo ? 'Todavía no estoy conectado a internet de verdad (falta el link de conexión).' : e.message === 'ocupado' ? 'Estoy un poquito saturado, probá en un minuto.' : 'No me pude conectar ahora.';
+    resp = { texto: local ? local + '\n\n(' + motivo + ' Para charlar de todo necesito conexión.)' : motivo + ' Igual te puedo contar tus tareas, exámenes, horario o cuánto ganaste. ¡Preguntame eso! 🦖' };
+  }
+  dinoPensando = false;
+  dino.push({ rol: 'assistant', ...resp, t: Date.now() });
+  guardarDino();
+  pintarChat(true);
+}
+
+function describirAccion(a) {
+  const f = a.fecha ? ' · ' + cuando(a.fecha) : '';
+  if (a.accion === 'agregar_tarea') return `📝 Tarea: ${a.titulo}${a.materia ? ' · ' + a.materia : ''}${f}`;
+  if (a.accion === 'agregar_examen') return `📚 Examen${a.materia ? ' de ' + a.materia : ''}: ${a.tema}${f}`;
+  if (a.accion === 'agregar_evento') return `${emojiEvento(a.tipo)} Evento: ${a.titulo}${f}`;
+  if (a.accion === 'mensaje_a_mama') return `💬 Mensaje a mamá: “${a.texto}”`;
+  return a.accion;
+}
+function aplicarAccion(a) {
+  const nom = (a.materia || '').toLowerCase().trim();
+  const mat = nom ? S.materias.find(m => m.nombre.toLowerCase().includes(nom) || nom.includes(m.nombre.toLowerCase())) : null;
+  const fecha = /^\d{4}-\d{2}-\d{2}$/.test(a.fecha || '') ? a.fecha : hoy();
+  if (a.accion === 'agregar_tarea') { S.tareas.push({ id: uid(), titulo: a.titulo || 'Tarea', materiaId: mat?.id || '', fecha, hecha: false }); return 'Tarea agregada 📝'; }
+  if (a.accion === 'agregar_examen') { S.examenes.push({ id: uid(), materiaId: mat?.id || '', tema: a.tema || '', fecha, nota: '' }); return 'Examen agregado 📚'; }
+  if (a.accion === 'agregar_evento') { S.eventos.push({ id: uid(), titulo: a.titulo || 'Evento', fecha, tipo: TIPOS_EVENTO.some(t => t[0] === a.tipo) ? a.tipo : 'otro' }); return 'Evento agregado 📅'; }
+  if (a.accion === 'mensaje_a_mama') { enviarMensaje(a.texto); return 'Mensaje enviado a mamá 💬'; }
+  return 'Listo';
+}
+function fmtDino(t) {
+  const lineas = esc(t).split('\n');
+  let html = '', enLista = false;
+  for (const l of lineas) {
+    const item = l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);
+    if (item) { if (!enLista) { html += '<ul>'; enLista = true; } html += '<li>' + item[1] + '</li>'; continue; }
+    if (enLista) { html += '</ul>'; enLista = false; }
+    html += l ? l + '<br>' : '<br>';
+  }
+  if (enLista) html += '</ul>';
+  return html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[\s(])_(.+?)_(?=[\s).,!?]|$)/g, '$1<i>$2</i>').replace(/(<br>)+$/, '');
+}
+
+/* ---------- chat con mamá ---------- */
+let chat = leer(KEY_CHAT, []);
+let chatOk = null;
+const ultimoId = () => chat.reduce((m, x) => Math.max(m, x.id || 0), 0);
+const noLeidos = () => chat.filter(m => m.de !== yo() && !m.leido).length;
+const viendoChatMama = () => !document.hidden && (esMama() ? ui.mama === 'chat' : ui.vista === 'chat' && ui.chat === 'mama');
+
+async function traerMensajes() {
+  if (!fam.codigo) return;
+  try {
+    const { mensajes } = await api('mensajes', { desde: ultimoId() });
+    chatOk = true;
+    const nuevos = (mensajes || []).filter(m => !chat.some(c => c.id === m.id));
+    if (nuevos.length) {
+      chat.push(...nuevos);
+      chat = chat.slice(-300);
+      escribir(KEY_CHAT, chat);
+      const delOtro = nuevos.filter(m => m.de !== yo() && !m.leido);
+      if (delOtro.length && !viendoChatMama()) notificar(delOtro[delOtro.length - 1]);
+    }
+    if (viendoChatMama() && noLeidos()) marcarLeidos();
+    if (nuevos.length) { if (ui.vista === 'chat') pintarChat(true); pintarNav(); }
+  } catch (e) {
+    chatOk = e.status === 401 ? 'codigo' : false;
+  }
+}
+async function marcarLeidos() {
+  chat.forEach(m => { if (m.de !== yo()) m.leido = true; });
+  escribir(KEY_CHAT, chat);
+  pintarNav();
+  try { await api('leidos', { de: yo() }); } catch (e) {}
+}
+async function enviarMensaje(texto) {
+  texto = String(texto || '').trim();
+  if (!texto) return;
+  const temporal = { id: 0, tmp: uid(), de: yo(), texto, creado: new Date().toISOString(), leido: false };
+  chat.push(temporal);
+  pintarChat(true);
+  try {
+    const { mensaje } = await api('enviar', { de: yo(), texto });
+    chat = chat.filter(m => m !== temporal);
+    if (!chat.some(m => m.id === mensaje.id)) chat.push(mensaje);
+    escribir(KEY_CHAT, chat);
+  } catch (e) {
+    temporal.error = true;
+    avisar(e.sinCodigo ? 'Falta conectar la agenda con mamá' : 'No se pudo enviar. ¿Hay internet?');
+  }
+  pintarChat(true);
+}
+function notificar(m) {
+  document.title = '(' + noLeidos() + ') Mi Agenda Dulce';
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const titulo = m.de === 'mama' ? 'Mamá' : (S.nombre || 'Tu hija');
+  const op = { body: m.texto, icon: 'icono-192.png', badge: 'icono-192.png', tag: 'chat-agenda' };
+  navigator.serviceWorker?.ready.then(r => r.showNotification(titulo, op)).catch(() => { try { new Notification(titulo, op); } catch (e) {} });
+}
+setInterval(() => { if (!document.hidden) traerMensajes(); }, 12000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { traerMensajes(); document.title = 'Mi Agenda Dulce'; if (viendoChatMama() && noLeidos()) marcarLeidos(); }
+});
+
+/* ---------- instalar ---------- */
+let pedidoInstalar = null;
+const instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedidoInstalar = e; if (ui.vista === 'inicio' || ui.vista === 'ajustes') render(); });
+addEventListener('appinstalled', () => { pedidoInstalar = null; avisar('¡Instalada! Buscala con el dino 🦖'); render(); });
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
+function tarjetaInstalar(siempre) {
+  if (instalada() || (!siempre && S.ocultarInstalar)) return '';
+  const como = pedidoInstalar ? '' : esIOS ? 'Tocá <b>Compartir</b> ⬆️ y después <b>Agregar a inicio</b>.' : 'Menú ⋮ del navegador → <b>Instalar app</b>.';
+  return `<div class="instalar"><img src="icono-192.png" alt=""><div><b>Tenela como app</b>${como || 'Con su ícono en el celu o en la compu.'}</div>
+    ${pedidoInstalar ? '<button class="btn primario chico" data-act="instalar">Instalar</button>' : ''}${!siempre ? '<button class="btn chico" data-act="ocultar-instalar" aria-label="Cerrar">✕</button>' : ''}</div>`;
 }
 
 /* ---------- vistas ---------- */
@@ -519,12 +898,12 @@ function filaExamen(e) {
   const chip = e.nota !== '' && e.nota != null ? `<span class="chip ${e.nota >= 7 ? 'verde' : e.nota >= 4 ? 'ambar' : 'rojo'}">Nota ${e.nota}</span>`
     : `<span class="chip ${n < 0 ? '' : n <= 3 ? 'rosa' : 'azul'}">${n < 0 ? 'falta la nota' : n === 0 ? '¡hoy!' : 'faltan ' + n + ' d'}</span>`;
   return `<div class="fila tocable" data-act="examen-edit" data-id="${e.id}"><span class="punto" style="background:${colorMat(e.materiaId)}"></span>
-    <div class="cuerpo"><div class="titulo">${esc(nombreMat(e.materiaId))}: ${esc(e.tema)}</div><div class="sub">${e.fecha ? fechaCorta(e.fecha) : 'sin fecha'}</div></div>${chip}</div>`;
+    <div class="cuerpo"><div class="titulo">📚 ${esc(nombreMat(e.materiaId))}: ${esc(e.tema)}</div><div class="sub">${e.fecha ? fechaCorta(e.fecha) : 'sin fecha'}</div></div>${chip}</div>`;
 }
 function filaVenta(v) {
   return `<div class="fila"><div class="cuerpo tocable" data-act="venta-edit" data-id="${v.id}">
     <div class="titulo">${esc(v.producto)} × ${v.cant}</div><div class="sub">${esc(v.cliente || 'sin nombre')} · ${cuando(v.fecha)}</div>
-    <div class="botones" style="margin-top:6px">
+    <div class="botones" style="margin-top:5px">
       <button class="chip ${v.entregado ? 'verde' : 'ambar'}" data-act="venta-entregado" data-id="${v.id}">${v.entregado ? '✓ Entregado' : 'Por entregar'}</button>
       <button class="chip ${v.pagado ? 'verde' : 'rojo'}" data-act="venta-pagado" data-id="${v.id}">${v.pagado ? '✓ Pagado' : 'Falta pagar'}</button></div></div>
     <span class="monto">${plata(totalVenta(v))}</span></div>`;
@@ -534,38 +913,39 @@ const proxExamenes = () => S.examenes.filter(e => e.fecha && diasHasta(e.fecha) 
 
 function vistaInicio() {
   const d = new Date();
-  const pend = pendientes();
-  const exs = proxExamenes();
-  const pedidos = S.ventas.filter(v => !v.entregado).sort((a, b) => a.fecha.localeCompare(b.fecha));
-  const r = resumenMes(hoy().slice(0, 7));
   const dia = d.getDay();
   const cole = dia >= 1 && dia <= 5 ? (S.horario[dia] || []) : [];
-  const proxEventos = S.eventos.filter(e => diasHasta(e.fecha) >= 0 && diasHasta(e.fecha) <= 7).sort((a, b) => a.fecha.localeCompare(b.fecha));
-  return `
-  ${!S.nombre ? `<div class="tarjeta"><h2>¡Hola! ¿Cómo te llamás?</h2><div class="botones"><input id="in-nombre" class="precio-in" style="flex:1;text-align:left;width:auto" placeholder="Tu nombre"><button class="btn primario chico" data-act="poner-nombre">Listo</button></div></div>` : ''}
+  const viene = [
+    ...pendientes().slice(0, 5).map(t => ({ f: t.fecha || '9', html: filaTarea(t) })),
+    ...proxExamenes().slice(0, 3).map(e => ({ f: e.fecha, html: filaExamen(e) })),
+    ...S.eventos.filter(e => diasHasta(e.fecha) >= 0 && diasHasta(e.fecha) <= 7).map(e => ({ f: e.fecha, html: `<div class="fila tocable" data-act="evento-edit" data-id="${e.id}"><span class="punto" style="background:var(--violeta)"></span><div class="cuerpo"><div class="titulo">${emojiEvento(e.tipo)} ${esc(e.titulo)}</div></div><span class="chip violeta">${cuando(e.fecha)}</span></div>` }))
+  ].sort((a, b) => a.f.localeCompare(b.f)).slice(0, 6);
+  const pedidos = S.ventas.filter(v => !v.entregado).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const r = resumenMes(hoy().slice(0, 7));
+  const sinLeer = noLeidos();
+  return `${tarjetaInstalar(false)}
+  ${sinLeer ? `<button class="aviso" style="width:100%;border:0;text-align:left;cursor:pointer;background:var(--rosa-soft);color:var(--rosa)" data-act="ir" data-v="chat" data-s="mama">💬 Mamá te escribió (${sinLeer})</button>` : ''}
+  ${cole.length ? `<div class="hoy-cole">Hoy: ${cole.map(id => `<span class="chip" style="background:${colorMat(id)};color:#fff">${esc(nombreMat(id))}</span>`).join('')}</div>` : ''}
   <div class="rapidos">
     <button data-act="nueva-tarea"><span>📝</span>Tarea</button>
     <button data-act="nuevo-examen"><span>📚</span>Examen</button>
     <button data-act="nueva-venta"><span>🧁</span>Venta</button>
-    <button data-act="nuevo-gasto"><span>💸</span>Gasto</button>
+    <button data-act="ir" data-v="chat" data-s="dino"><span>🦖</span>Dino</button>
   </div>
-  ${cole.length ? `<div class="tarjeta"><h2>Hoy en el cole</h2><div class="botones">${cole.map(id => `<span class="chip" style="background:${colorMat(id)};color:#fff">${esc(nombreMat(id))}</span>`).join('')}</div></div>` : ''}
-  <div class="tarjeta"><h2>Tareas que vienen <button class="btn chico" data-act="ir" data-v="colegio" data-s="tareas">Ver todas</button></h2>
-    ${pend.length ? pend.slice(0, 4).map(filaTarea).join('') : '<p class="vacio">No tenés tareas pendientes 🎉</p>'}</div>
-  <div class="tarjeta"><h2>Próximos exámenes <button class="btn chico" data-act="ir" data-v="colegio" data-s="examenes">Ver todos</button></h2>
-    ${exs.length ? exs.slice(0, 3).map(filaExamen).join('') : '<p class="vacio">No hay exámenes anotados.</p>'}</div>
-  ${proxEventos.length ? `<div class="tarjeta"><h2>Esta semana</h2>${proxEventos.map(e => `<div class="fila"><div class="cuerpo"><div class="titulo">${(TIPOS_EVENTO.find(t => t[0] === e.tipo) || ['', '⭐'])[1].split(' ')[0]} ${esc(e.titulo)}</div></div><span class="chip violeta">${cuando(e.fecha)}</span></div>`).join('')}</div>` : ''}
-  <div class="tarjeta"><h2>Pedidos por entregar <button class="btn chico" data-act="ir" data-v="negocio" data-s="ventas">Ventas</button></h2>
-    ${pedidos.length ? pedidos.slice(0, 4).map(filaVenta).join('') : '<p class="vacio">No hay pedidos pendientes.</p>'}</div>
-  <div class="tarjeta"><h2>Tu negocio en ${MESES[d.getMonth()]} <button class="btn chico" data-act="ir" data-v="negocio" data-s="plata">Plata</button></h2>
+  <div class="cards">
+  <div class="tarjeta"><h2>Lo que viene <button class="btn chico" data-act="ir" data-v="colegio" data-s="tareas">Todo</button></h2>
+    ${viene.length ? viene.map(x => x.html).join('') : '<p class="vacio">Nada pendiente. ¡Sos una genia! 🎉</p>'}</div>
+  ${pedidos.length ? `<div class="tarjeta"><h2>Pedidos por entregar</h2>${pedidos.slice(0, 3).map(filaVenta).join('')}</div>` : ''}
+  <div class="tarjeta tocable" data-act="ir" data-v="negocio" data-s="plata"><h2>Tu negocio en ${MESES[d.getMonth()]}</h2>
     <div class="cifras"><div class="cifra verde"><small>Ganaste</small><b>${plata(r.ganado)}</b></div>
     <div class="cifra rosa"><small>Gastaste</small><b>${plata(r.gastado)}</b></div>
     <div class="cifra"><small>Te quedó</small><b>${plata(r.ganancia)}</b></div></div>
-    ${r.porCobrar ? `<p class="sub" style="margin:10px 0 0">Te deben ${plata(r.porCobrar)}.</p>` : ''}</div>`;
+    ${r.porCobrar ? `<p class="sub" style="margin:8px 0 0">Te deben ${plata(r.porCobrar)}.</p>` : ''}</div>
+  </div>`;
 }
 
 function vistaColegio() {
-  const tabs = [['tareas', '📝 Tareas'], ['examenes', '📚 Exámenes'], ['materias', '🏫 Materias y horario']];
+  const tabs = [['tareas', '📝 Tareas'], ['examenes', '📚 Exámenes'], ['archivos', '📎 Archivos'], ['materias', '🏫 Materias']];
   let html = `<div class="pestanas">${tabs.map(([k, l]) => `<button class="pestana ${ui.colegio === k ? 'activa' : ''}" data-act="sub-colegio" data-s="${k}">${l}</button>`).join('')}</div>`;
   if (ui.colegio === 'tareas') {
     const pend = pendientes();
@@ -573,32 +953,39 @@ function vistaColegio() {
     const semana = pend.filter(t => !t.fecha || (diasHasta(t.fecha) >= 0 && diasHasta(t.fecha) < 7));
     const despues = pend.filter(t => t.fecha && diasHasta(t.fecha) >= 7);
     const hechas = S.tareas.filter(t => t.hecha).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
-    html += `<button class="btn primario ancho" data-act="nueva-tarea" style="margin-bottom:14px">+ Nueva tarea</button>`;
+    html += `<div class="barra-acciones"><button class="btn primario" data-act="nueva-tarea">+ Nueva tarea</button><button class="btn" data-act="ir" data-v="chat" data-s="dino">🦖 Ayuda con una tarea</button></div><div class="cards">`;
     if (atrasadas.length) html += `<div class="tarjeta"><h2>⚠️ Atrasadas</h2>${atrasadas.map(filaTarea).join('')}</div>`;
     html += `<div class="tarjeta"><h2>Esta semana</h2>${semana.length ? semana.map(filaTarea).join('') : '<p class="vacio">Nada para esta semana.</p>'}</div>`;
     if (despues.length) html += `<div class="tarjeta"><h2>Más adelante</h2>${despues.map(filaTarea).join('')}</div>`;
     if (hechas.length) html += `<div class="tarjeta"><h2>Hechas (${hechas.length}) <button class="btn chico" data-act="ver-hechas">${ui.verHechas ? 'Ocultar' : 'Mostrar'}</button></h2>${ui.verHechas ? hechas.slice(0, 30).map(filaTarea).join('') : ''}</div>`;
+    html += '</div>';
   } else if (ui.colegio === 'examenes') {
     const prox = proxExamenes();
     const pasados = S.examenes.filter(e => !e.fecha || diasHasta(e.fecha) < 0).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
-    html += `<button class="btn primario ancho" data-act="nuevo-examen" style="margin-bottom:14px">+ Nuevo examen</button>
+    html += `<div class="barra-acciones"><button class="btn primario" data-act="nuevo-examen">+ Nuevo examen</button></div><div class="cards">
       <div class="tarjeta"><h2>Próximos</h2>${prox.length ? prox.map(filaExamen).join('') : '<p class="vacio">No hay exámenes anotados.</p>'}</div>
-      ${pasados.length ? `<div class="tarjeta"><h2>Ya los rendí</h2>${pasados.map(filaExamen).join('')}<p class="sub" style="margin:8px 0 0">Tocá un examen para ponerle la nota.</p></div>` : ''}`;
+      ${pasados.length ? `<div class="tarjeta"><h2>Ya los rendí</h2>${pasados.map(filaExamen).join('')}<p class="sub" style="margin:6px 0 0">Tocá un examen para ponerle la nota.</p></div>` : ''}</div>`;
+  } else if (ui.colegio === 'archivos') {
+    const lista = archivos.filter(a => !ui.archMateria || a.materiaId === ui.archMateria).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    html += `<div class="barra-acciones"><button class="btn primario" data-act="subir-foto">📷 Sacar foto</button><button class="btn" data-act="subir-archivo">📎 Subir archivo</button></div>
+      <div class="pestanas"><button class="pestana ${!ui.archMateria ? 'activa' : ''}" data-act="arch-materia" data-id="">Todas</button>${S.materias.map(m => `<button class="pestana ${ui.archMateria === m.id ? 'activa' : ''}" data-act="arch-materia" data-id="${m.id}"><span class="punto" style="background:${m.color}"></span> ${esc(m.nombre)}</button>`).join('')}</div>
+      <div class="tarjeta">${lista.length ? `<div class="archivos">${lista.map(a => `<button class="archivo" data-act="arch-edit" data-id="${a.id}"><div class="vista">${esImagen(a) ? `<img src="${urlDe(a)}" alt="" loading="lazy">` : iconoArchivo(a)}${a.materiaId ? `<span class="punto" style="background:${colorMat(a.materiaId)}"></span>` : ''}</div><div class="nom">${esc(a.nombre)}</div></button>`).join('')}</div>`
+        : `<p class="vacio">Sacale foto al pizarrón, a las fotocopias o subí PDFs y documentos. ${ui.archMateria ? 'Se guardan en ' + esc(nombreMat(ui.archMateria)) + '.' : 'Elegí una materia arriba para que se guarden ahí.'}</p>`}
+      <p class="sub" style="margin:8px 0 0">Quedan guardados en este aparato. Con una foto, tocá 🦖 Preguntar y Dino te ayuda a entenderla.</p></div>`;
   } else {
     const dHoy = new Date().getDay();
-    html += `<div class="tarjeta"><h2>Mi horario</h2><div class="horario">${[1, 2, 3, 4, 5].map(d => `<div class="dia ${d === dHoy ? 'hoy' : ''}"><b>${DIAS[d]}</b>
+    html += `<div class="cards"><div class="tarjeta"><h2>Mi horario</h2><div class="horario">${[1, 2, 3, 4, 5].map(d => `<div class="dia ${d === dHoy ? 'hoy' : ''}"><b>${DIAS[d]}</b>
       ${(S.horario[d] || []).map((id, k) => `<button class="mat" style="background:${colorMat(id)}" data-act="hor-quitar" data-d="${d}" data-k="${k}" title="Tocá para sacar">${esc(nombreMat(id))}</button>`).join('')}
       <button class="mas" data-act="hor-agregar" data-d="${d}" aria-label="Agregar materia">+</button></div>`).join('')}</div>
-      <p class="sub" style="margin:8px 0 0">Tocá + para sumar una materia al día. Tocá una materia para sacarla.</p></div>
+      <p class="sub" style="margin:6px 0 0">+ suma una materia al día. Tocá una materia para sacarla.</p></div>
       <div class="tarjeta"><h2>Materias <button class="btn chico" data-act="nueva-materia">+ Materia</button></h2>
       ${S.materias.map(m => {
-        const notas = S.examenes.filter(e => e.materiaId === m.id && e.nota !== '' && e.nota != null).map(e => num(e.nota));
-        const prom = notas.length ? (notas.reduce((a, b) => a + b, 0) / notas.length) : null;
+        const prom = promedioMateria(m.id);
         const pend = S.tareas.filter(t => t.materiaId === m.id && !t.hecha).length;
         return `<div class="fila tocable" data-act="materia-edit" data-id="${m.id}"><span class="punto" style="background:${m.color}"></span>
           <div class="cuerpo"><div class="titulo">${esc(m.nombre)}</div><div class="sub">${m.profe ? esc(m.profe) + ' · ' : ''}${pend} tarea${pend === 1 ? '' : 's'} pendiente${pend === 1 ? '' : 's'}</div></div>
-          ${prom != null ? `<span class="chip ${prom >= 7 ? 'verde' : prom >= 4 ? 'ambar' : 'rojo'}">Promedio ${prom.toFixed(1).replace('.', ',')}</span>` : ''}</div>`;
-      }).join('') || '<p class="vacio">Agregá tus materias.</p>'}</div>`;
+          ${prom != null ? `<span class="chip ${prom >= 7 ? 'verde' : prom >= 4 ? 'ambar' : 'rojo'}">Prom. ${prom.toFixed(1).replace('.', ',')}</span>` : ''}</div>`;
+      }).join('') || '<p class="vacio">Agregá tus materias.</p>'}</div></div>`;
   }
   return html;
 }
@@ -608,7 +995,7 @@ function itemsDelDia(f) {
   S.tareas.filter(t => t.fecha === f).forEach(t => it.push({ color: 'var(--azul)', texto: '📝 ' + t.titulo + ' (' + nombreMat(t.materiaId) + ')', act: 'tarea-edit', id: t.id, hecho: t.hecha }));
   S.examenes.filter(e => e.fecha === f).forEach(e => it.push({ color: 'var(--rosa)', texto: '📚 Examen de ' + nombreMat(e.materiaId) + ': ' + e.tema, act: 'examen-edit', id: e.id }));
   S.ventas.filter(v => v.fecha === f).forEach(v => it.push({ color: 'var(--ambar)', texto: '🧁 Entregar ' + v.producto + ' × ' + v.cant + (v.cliente ? ' a ' + v.cliente : ''), act: 'venta-edit', id: v.id, hecho: v.entregado }));
-  S.eventos.filter(e => e.fecha === f).forEach(e => it.push({ color: 'var(--violeta)', texto: (TIPOS_EVENTO.find(t => t[0] === e.tipo) || ['', '⭐'])[1].split(' ')[0] + ' ' + e.titulo, act: 'evento-edit', id: e.id }));
+  S.eventos.filter(e => e.fecha === f).forEach(e => it.push({ color: 'var(--violeta)', texto: emojiEvento(e.tipo) + ' ' + e.titulo, act: 'evento-edit', id: e.id }));
   return it;
 }
 function vistaCalendario() {
@@ -618,19 +1005,19 @@ function vistaCalendario() {
   const celdas = [];
   for (let k = 0; k < 42; k++) {
     const d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + k);
-    if (k >= 35 && d.getMonth() !== m - 1) break;
+    if (k % 7 === 0 && k >= 28 && d.getMonth() !== m - 1) break;
     const f = iso(d);
     const colores = [...new Set(itemsDelDia(f).map(i => i.color))].slice(0, 4);
     celdas.push(`<button class="${d.getMonth() !== m - 1 ? 'fuera' : ''} ${f === hoy() ? 'hoy' : ''} ${f === ui.calDia ? 'sel' : ''}" data-act="cal-dia" data-f="${f}">${d.getDate()}<span class="puntos">${colores.map(c => `<i style="background:${c}"></i>`).join('')}</span></button>`);
   }
   const items = itemsDelDia(ui.calDia);
   const dSel = aFecha(ui.calDia);
-  return `<div class="tarjeta"><div class="cal-cab"><button class="icono" data-act="cal-mes" data-n="-1" aria-label="Mes anterior">‹</button>
+  return `<div class="cards"><div class="tarjeta"><div class="cal-cab"><button class="icono" data-act="cal-mes" data-n="-1" aria-label="Mes anterior">‹</button>
     <b>${MESES[m - 1]} ${y}</b><button class="icono" data-act="cal-mes" data-n="1" aria-label="Mes siguiente">›</button></div>
     <div class="cal">${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => `<div class="dsem">${x}</div>`).join('')}${celdas.join('')}</div>
     <div class="leyenda"><span><i class="punto" style="background:var(--azul)"></i>Tareas</span><span><i class="punto" style="background:var(--rosa)"></i>Exámenes</span><span><i class="punto" style="background:var(--ambar)"></i>Pedidos</span><span><i class="punto" style="background:var(--violeta)"></i>Eventos</span></div></div>
     <div class="tarjeta"><h2>${DIAS_LARGOS[dSel.getDay()].replace(/^./, c => c.toUpperCase())} ${dSel.getDate()} de ${MESES[dSel.getMonth()]} <button class="btn chico primario" data-act="nuevo-evento">+ Evento</button></h2>
-    ${items.length ? items.map(i => `<div class="fila tocable" data-act="${i.act}" data-id="${i.id}"><span class="punto" style="background:${i.color}"></span><div class="cuerpo"><div class="titulo ${i.hecho ? 'tachado' : ''}">${esc(i.texto)}</div></div></div>`).join('') : '<p class="vacio">Nada anotado este día.</p>'}</div>`;
+    ${items.length ? items.map(i => `<div class="fila tocable" data-act="${i.act}" data-id="${i.id}"><span class="punto" style="background:${i.color}"></span><div class="cuerpo"><div class="titulo ${i.hecho ? 'tachado' : ''}">${esc(i.texto)}</div></div></div>`).join('') : '<p class="vacio">Nada anotado este día.</p>'}</div></div>`;
 }
 
 function vistaNegocio() {
@@ -638,9 +1025,9 @@ function vistaNegocio() {
   let html = `<div class="pestanas">${tabs.map(([k, l]) => `<button class="pestana ${ui.negocio === k ? 'activa' : ''}" data-act="sub-negocio" data-s="${k}">${l}${k === 'lista' && S.lista.length ? ' (' + S.lista.length + ')' : ''}</button>`).join('')}</div>`;
   const t = ui.negocio;
   if (t === 'super') {
-    html += `${S.ejemplos ? `<div class="aviso">Los precios son de ejemplo. Tocá cada producto y poné lo que sale donde comprás. <button class="btn chico" data-act="ocultar-ejemplo" style="margin-top:6px">Entendido</button></div>` : ''}
-      <button class="btn primario ancho" data-act="nuevo-ingrediente" style="margin-bottom:14px">+ Producto</button>
-      <div class="tarjeta"><h2>Mis productos</h2>${S.ingredientes.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(i => {
+    html += `${S.ejemplos ? `<div class="aviso">Los precios son de ejemplo: tocá cada producto y poné lo que sale donde comprás. <button class="btn chico" data-act="ocultar-ejemplo">Entendido</button></div>` : ''}
+      <div class="barra-acciones"><button class="btn primario" data-act="nuevo-ingrediente">+ Producto</button><button class="btn" data-act="sub-negocio" data-s="lista">🛒 Ver lista</button></div>
+      <div class="tarjeta">${S.ingredientes.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(i => {
         const porCien = i.unidad === 'u' ? plata(i.precio / (i.cantidad || 1)) + ' c/u' : plata(i.precio / (i.cantidad || 1) * 100) + ' c/100 ' + i.unidad;
         return `<div class="fila"><div class="cuerpo tocable" data-act="ingrediente-edit" data-id="${i.id}"><div class="titulo">${esc(i.nombre)}</div><div class="sub">Paquete de ${i.cantidad} ${unidadCorta(i.unidad)} · ${porCien}</div></div>
           <span class="monto">${plata(i.precio)}</span><button class="btn chico" data-act="a-lista" data-id="${i.id}" aria-label="Agregar a la lista">🛒+</button></div>`;
@@ -648,37 +1035,37 @@ function vistaNegocio() {
   } else if (t === 'lista') {
     const total = S.lista.reduce((s, l) => s + l.paquetes * num(l.precio), 0);
     const tildado = S.lista.filter(l => l.check).reduce((s, l) => s + l.paquetes * num(l.precio), 0);
-    html += `<div class="botones" style="margin-bottom:14px"><button class="btn primario" data-act="item-lista">+ Agregar</button><button class="btn" data-act="lista-receta">📖 Desde una receta</button></div>
+    html += `<div class="barra-acciones"><button class="btn primario" data-act="item-lista">+ Agregar</button><button class="btn" data-act="lista-receta">📖 Desde una receta</button></div>
       <div class="tarjeta"><h2>Lista de compras <span class="monto">${plata(total)}</span></h2>
       ${S.lista.length ? S.lista.map(l => `<div class="fila"><button class="check ${l.check ? 'si' : ''}" data-act="lista-check" data-id="${l.id}" aria-label="Lo tengo">${l.check ? '✓' : ''}</button>
         <div class="cuerpo"><div class="titulo ${l.check ? 'tachado' : ''}">${esc(l.nombre)}</div><div class="sub">${plata(l.paquetes * num(l.precio))}</div></div>
         <div class="stepper"><button data-act="lista-menos" data-id="${l.id}" aria-label="Menos">−</button><span>${l.paquetes}</span><button data-act="lista-mas" data-id="${l.id}" aria-label="Más">+</button></div>
         <input class="precio-in" type="number" inputmode="decimal" min="0" value="${num(l.precio)}" data-cambio="lista-precio" data-id="${l.id}" aria-label="Precio de cada uno"></div>`).join('')
         : '<p class="vacio">La lista está vacía. Agregá productos o armala desde una receta.</p>'}
-      ${S.lista.length ? `<p class="sub" style="margin:8px 0 0">Tildá lo que vas metiendo en el carrito. Si un precio cambió, corregilo en el casillero.</p>` : ''}</div>
+      ${S.lista.length ? `<p class="sub" style="margin:6px 0 0">Tildá lo que metés en el carrito. Si un precio cambió, corregilo en el casillero.</p>` : ''}</div>
       ${S.lista.length ? `<button class="btn primario ancho" data-act="terminar-compra">✅ Terminé de comprar ${tildado ? '· ' + plata(tildado) : ''}</button>` : ''}`;
   } else if (t === 'recetas') {
-    html += `<button class="btn primario ancho" data-act="nueva-receta" style="margin-bottom:14px">+ Nueva receta</button>
+    html += `<div class="barra-acciones"><button class="btn primario" data-act="nueva-receta">+ Nueva receta</button></div><div class="cards">
       ${S.recetas.map(r => {
         const precio = precioReceta(r), cu = costoUnidad(r);
         return `<div class="tarjeta"><h2>${esc(r.nombre)} <span class="sub mini">rinde ${r.rinde}</span></h2>
           <div class="receta-costos"><div>Hacerla te cuesta<b>${plata(costoReceta(r))}</b></div><div>Cada una te cuesta<b>${plata(cu)}</b></div>
           <div>La vendés a<b>${plata(precio)}${num(r.precio) ? '' : ' <span class="sub">(sugerido)</span>'}</b></div><div>Ganás por cada una<b style="color:${precio - cu >= 0 ? 'var(--verde)' : 'var(--rojo)'}">${plata(precio - cu)}</b></div></div>
           ${r.pasos ? `<div class="pasos">${esc(r.pasos)}</div>` : ''}
-          <div class="botones" style="margin-top:10px"><button class="btn chico" data-act="receta-edit" data-id="${r.id}">Editar</button><button class="btn chico" data-act="lista-receta" data-id="${r.id}">🛒 Comprar para hacerla</button></div></div>`;
-      }).join('') || '<div class="tarjeta"><p class="vacio">Todavía no tenés recetas.</p></div>'}
-      <p class="sub">El precio sugerido es ${String(S.margen).replace('.', ',')} veces lo que te cuesta, para cubrir gas, luz, packaging y tu trabajo. Lo podés cambiar en ⚙️.</p>`;
+          <div class="botones" style="margin-top:8px"><button class="btn chico" data-act="receta-edit" data-id="${r.id}">Editar</button><button class="btn chico" data-act="lista-receta" data-id="${r.id}">🛒 Comprar para hacerla</button></div></div>`;
+      }).join('') || '<div class="tarjeta"><p class="vacio">Todavía no tenés recetas.</p></div>'}</div>
+      <p class="sub">El precio sugerido es ${String(S.margen).replace('.', ',')} veces lo que te cuesta, para cubrir gas, luz, packaging y tu trabajo. Se cambia en ⚙️.</p>`;
   } else if (t === 'ventas') {
     const porEntregar = S.ventas.filter(v => !v.entregado).sort((a, b) => a.fecha.localeCompare(b.fecha));
     const resto = S.ventas.filter(v => v.entregado).sort((a, b) => b.fecha.localeCompare(a.fecha));
-    html += `<button class="btn primario ancho" data-act="nueva-venta" style="margin-bottom:14px">+ Nueva venta o pedido</button>
+    html += `<div class="barra-acciones"><button class="btn primario" data-act="nueva-venta">+ Nueva venta o pedido</button></div><div class="cards">
       <div class="tarjeta"><h2>Por entregar</h2>${porEntregar.length ? porEntregar.map(filaVenta).join('') : '<p class="vacio">No hay pedidos pendientes.</p>'}</div>
-      <div class="tarjeta"><h2>Entregadas</h2>${resto.length ? resto.slice(0, 40).map(filaVenta).join('') : '<p class="vacio">Acá van a aparecer tus ventas.</p>'}</div>`;
+      <div class="tarjeta"><h2>Entregadas</h2>${resto.length ? resto.slice(0, 40).map(filaVenta).join('') : '<p class="vacio">Acá van a aparecer tus ventas.</p>'}</div></div>`;
   } else {
     const r = resumenMes(ui.finMes);
     const [y, m] = ui.finMes.split('-').map(Number);
     const meses = [];
-    for (let k = 5; k >= 0; k--) { const d = new Date(y, m - 1 - k, 1); meses.push(iso(d).slice(0, 7)); }
+    for (let k = 5; k >= 0; k--) meses.push(iso(new Date(y, m - 1 - k, 1)).slice(0, 7));
     const datos = meses.map(mm => ({ mm, ...resumenMes(mm) }));
     const max = Math.max(1, ...datos.map(d => Math.max(d.ganado, d.gastado)));
     const top = {};
@@ -688,10 +1075,10 @@ function vistaNegocio() {
       ...r.ventas.filter(v => v.pagado).map(v => ({ fecha: v.fecha, texto: '🧁 ' + v.producto + ' × ' + v.cant + (v.cliente ? ' · ' + v.cliente : ''), monto: totalVenta(v), act: 'venta-edit', id: v.id })),
       ...S.gastos.filter(g => mesDe(g.fecha) === ui.finMes).map(g => ({ fecha: g.fecha, texto: '💸 ' + g.concepto, monto: -num(g.monto), act: 'gasto-edit', id: g.id }))
     ].sort((a, b) => b.fecha.localeCompare(a.fecha));
-    html += `<div class="tarjeta"><div class="cal-cab"><button class="icono" data-act="fin-mes" data-n="-1" aria-label="Mes anterior">‹</button>
+    html += `<div class="cards"><div class="tarjeta"><div class="cal-cab"><button class="icono" data-act="fin-mes" data-n="-1" aria-label="Mes anterior">‹</button>
       <b>${MESES[m - 1]} ${y}</b><button class="icono" data-act="fin-mes" data-n="1" aria-label="Mes siguiente">›</button></div>
       <div class="cifras"><div class="cifra verde"><small>Ganaste</small><b>${plata(r.ganado)}</b></div><div class="cifra rosa"><small>Gastaste</small><b>${plata(r.gastado)}</b></div><div class="cifra"><small>Te quedó</small><b>${plata(r.ganancia)}</b></div></div>
-      ${r.porCobrar ? `<div class="aviso" style="margin:10px 0 0">Te deben ${plata(r.porCobrar)} de ventas sin cobrar.</div>` : ''}</div>
+      ${r.porCobrar ? `<div class="aviso" style="margin:8px 0 0">Te deben ${plata(r.porCobrar)} de ventas sin cobrar.</div>` : ''}</div>
       <div class="tarjeta"><h2>Últimos 6 meses</h2><div class="barras">${datos.map(d => `<div class="mes"><div class="par">
         <i style="height:${d.ganado / max * 100}%;background:var(--verde)" title="Ganaste ${plata(d.ganado)}"></i><i style="height:${d.gastado / max * 100}%;background:var(--rosa)" title="Gastaste ${plata(d.gastado)}"></i></div>
         <small>${MESES[Number(d.mm.slice(5)) - 1].slice(0, 3)}</small></div>`).join('')}</div>
@@ -699,32 +1086,133 @@ function vistaNegocio() {
       ${ranking.length ? `<div class="tarjeta"><h2>Lo más vendido</h2>${ranking.map(([p, c], k) => `<div class="fila"><b>${['🥇', '🥈', '🥉'][k]}</b><div class="cuerpo"><div class="titulo">${esc(p)}</div></div><span class="chip">${c} vendidos</span></div>`).join('')}</div>` : ''}
       <div class="tarjeta"><h2>Movimientos <button class="btn chico" data-act="nuevo-gasto">+ Gasto</button></h2>
       ${movs.length ? movs.map(x => `<div class="fila tocable" data-act="${x.act}" data-id="${x.id}"><div class="cuerpo"><div class="titulo">${esc(x.texto)}</div><div class="sub">${fechaCorta(x.fecha)}</div></div><span class="monto" style="color:${x.monto >= 0 ? 'var(--verde)' : 'var(--rosa)'}">${x.monto >= 0 ? '+' : ''}${plata(x.monto)}</span></div>`).join('') : '<p class="vacio">Sin movimientos este mes.</p>'}
-      <p class="sub" style="margin:8px 0 0">Las ventas cobradas y las compras del súper se anotan solas.</p></div>`;
+      <p class="sub" style="margin:6px 0 0">Las ventas cobradas y las compras del súper se anotan solas.</p></div></div>`;
   }
   return html;
 }
 
+function vistaChat() {
+  const tabs = esMama() ? '' : `<div class="pestanas"><button class="pestana ${ui.chat === 'dino' ? 'activa' : ''}" data-act="sub-chat" data-s="dino">🦖 Dino</button>
+    <button class="pestana ${ui.chat === 'mama' ? 'activa' : ''}" data-act="sub-chat" data-s="mama">💬 Mamá${noLeidos() ? `<span class="globo">${noLeidos()}</span>` : ''}</button></div>`;
+  const esDino = !esMama() && ui.chat === 'dino';
+  const permisoAvisos = !esDino && 'Notification' in window && Notification.permission === 'default';
+  return `${tabs}<div class="chat">
+    ${permisoAvisos ? `<div class="adjunto" style="padding-bottom:6px"><span style="flex:1">Activá los avisos para enterarte cuando te escriben.</span><button class="btn chico" style="background:var(--violeta-soft);color:var(--violeta)" data-act="permiso-avisos">🔔 Activar</button></div>` : ''}
+    <div class="chat-lista" id="chat-lista"></div>
+    ${esDino ? `<div class="sugerencias" id="sugerencias"></div><div id="adjunto"></div>` : ''}
+    <div class="escribir">${esDino ? '<button data-act="dino-foto" aria-label="Agregar foto">📷</button>' : ''}
+      <textarea id="chat-texto" rows="1" placeholder="${esDino ? 'Preguntale a Dino…' : 'Escribí un mensaje…'}"></textarea>
+      <button class="enviar" data-act="chat-enviar" aria-label="Enviar">➤</button></div></div>`;
+}
+function pintarChat(abajo) {
+  const lista = document.getElementById('chat-lista');
+  if (!lista) return;
+  const esDino = !esMama() && ui.chat === 'dino';
+  if (esDino) {
+    if (!dino.length && !dinoPensando) {
+      lista.innerHTML = `<div class="chat-vacio"><img src="icono-192.png" alt=""><b>¡Hola${S.nombre ? ', ' + esc(S.nombre) : ''}! Soy Dino 🦖</b><br>Te ayudo a entender las tareas (sin hacértelas, eh 😉), a estudiar para las pruebas y con tu negocio de budines.</div>`;
+    } else {
+      lista.innerHTML = dino.map((m, i) => m.rol === 'user'
+        ? `<div class="msj yo">${m.img ? `<img class="foto" src="${m.img}" alt="">` : m.conFoto ? '📷 ' : ''}${esc(m.texto)}</div>`
+        : `<div class="fila-dino"><img class="av" src="icono-192.png" alt="Dino"><div class="msj otro">${fmtDino(m.texto)}${(m.acciones || []).map((a, k) => `<div class="accion">${esc(describirAccion(a))}${a.estado ? `<span class="chip ${a.estado === 'si' ? 'verde' : ''}">${a.estado === 'si' ? '✓ Hecho' : 'Descartado'}</span>` : `<div class="botones"><button class="btn chico primario" data-act="dino-accion" data-i="${i}" data-k="${k}" data-r="si">Sí, dale</button><button class="btn chico" data-act="dino-accion" data-i="${i}" data-k="${k}" data-r="no">No</button></div>`}</div>`).join('')}</div></div>`
+      ).join('') + (dinoPensando ? `<div class="fila-dino"><img class="av" src="icono-192.png" alt=""><div class="msj otro pensando"><span></span><span></span><span></span></div></div>` : '');
+    }
+    const sug = document.getElementById('sugerencias');
+    if (sug) sug.innerHTML = dino.length > 4 ? '' : SUGERENCIAS_DINO.map(s => `<button data-act="dino-sugerencia">${esc(s)}</button>`).join('');
+    const adj = document.getElementById('adjunto');
+    if (adj) adj.innerHTML = dinoAdjunto ? `<div class="adjunto"><img src="${dinoAdjunto}" alt=""><span style="flex:1">Foto lista para mandar</span><button data-act="dino-sin-foto">Quitar</button></div>` : '';
+  } else {
+    const otro = esMama() ? (S.nombre || 'tu hija') : 'mamá';
+    if (!fam.codigo) {
+      lista.innerHTML = `<div class="chat-vacio">💬<br><b>Chat con ${esc(otro)}</b><br>Para usarlo, abrí en este aparato el link de conexión que te pasaron. Se hace una sola vez.</div>`;
+    } else if (!chat.length) {
+      lista.innerHTML = `<div class="chat-vacio">💬<br>${chatOk === 'codigo' ? 'El link de conexión no es válido. Pedí uno nuevo.' : `Todavía no hay mensajes. ¡Escribile a ${esc(otro)}!`}</div>`;
+    } else {
+      let dia = '';
+      lista.innerHTML = chat.map(m => {
+        const d = (m.creado || '').slice(0, 10);
+        const sep = d !== dia ? (dia = d, `<div class="sub" style="text-align:center;margin:4px 0">${cuando(iso(new Date(m.creado)))}</div>`) : '';
+        const mio = m.de === yo();
+        return sep + `<div class="msj ${mio ? 'yo' : 'otro'}">${esc(m.texto)}<span class="hora">${horaDe(m.creado)}${mio ? (m.error ? ' ⚠️ no enviado' : m.id ? (m.leido ? ' ✓✓' : ' ✓') : ' 🕓') : ''}</span></div>`;
+      }).join('');
+    }
+  }
+  if (abajo) lista.scrollTop = lista.scrollHeight;
+}
+
+let agendaMama = null;
+async function traerAgendaMama() {
+  try { agendaMama = await api('agenda'); } catch (e) { agendaMama = { error: true }; }
+  if (esMama() && ui.mama === 'agenda') render();
+}
+function vistaAgendaMama() {
+  if (!agendaMama) { traerAgendaMama(); return '<div class="tarjeta"><p class="vacio">Cargando…</p></div>'; }
+  if (agendaMama.error) return '<div class="tarjeta"><p class="vacio">No se pudo cargar. ¿Hay internet?</p></div>';
+  const a = agendaMama.agenda || { tareas: [], examenes: [], eventos: [] };
+  const nom = esc(fam.nombre || 'Valentina');
+  const items = [
+    ...a.tareas.filter(t => t.fecha && diasHasta(t.fecha) >= -7).map(t => ({ f: t.fecha, html: `<div class="fila"><span class="punto" style="background:var(--azul)"></span><div class="cuerpo"><div class="titulo ${t.hecha ? 'tachado' : ''}">📝 ${esc(t.titulo)}</div><div class="sub">${esc(t.materia || 'Sin materia')}</div></div><span class="chip ${t.hecha ? 'verde' : diasHasta(t.fecha) < 0 ? 'rojo' : ''}">${t.hecha ? '✓ hecha' : cuando(t.fecha)}</span></div>` })),
+    ...a.examenes.filter(e => e.fecha && diasHasta(e.fecha) >= -14).map(e => ({ f: e.fecha, html: `<div class="fila"><span class="punto" style="background:var(--rosa)"></span><div class="cuerpo"><div class="titulo">📚 Examen de ${esc(e.materia || '?')}: ${esc(e.tema)}</div></div><span class="chip ${e.nota != null ? (e.nota >= 7 ? 'verde' : e.nota >= 4 ? 'ambar' : 'rojo') : 'rosa'}">${e.nota != null ? 'Nota ' + e.nota : cuando(e.fecha)}</span></div>` })),
+    ...a.eventos.filter(e => e.fecha && diasHasta(e.fecha) >= 0).map(e => ({ f: e.fecha, html: `<div class="fila"><span class="punto" style="background:var(--violeta)"></span><div class="cuerpo"><div class="titulo">${emojiEvento(e.tipo)} ${esc(e.titulo)}</div></div><span class="chip violeta">${cuando(e.fecha)}</span></div>` }))
+  ].sort((x, y) => x.f.localeCompare(y.f));
+  const atrasadas = a.tareas.filter(t => !t.hecha && t.fecha && diasHasta(t.fecha) < 0).length;
+  const webcal = agendaMama.ics.replace(/^https:/, 'webcal:');
+  return `<div class="cards"><div class="tarjeta"><h2>📅 En tu calendario</h2><p class="sub" style="margin:0 0 8px">Las tareas y exámenes de ${nom} aparecen solos en el calendario de tu celu y se actualizan cada tanto.</p>
+    <div class="botones"><a class="btn primario chico" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}" target="_blank" rel="noopener">Google Calendar</a><a class="btn chico" href="${esc(webcal)}">iPhone / otro</a><button class="btn chico" data-act="copiar-ics">Copiar link</button></div></div>
+    ${atrasadas ? `<div class="aviso">⚠️ ${nom} tiene ${atrasadas} tarea${atrasadas === 1 ? '' : 's'} atrasada${atrasadas === 1 ? '' : 's'}.</div>` : ''}
+    <div class="tarjeta"><h2>Lo que viene <button class="btn chico" data-act="recargar-agenda" aria-label="Actualizar">↻</button></h2>${items.length ? items.map(x => x.html).join('') : `<p class="vacio">${a.tareas.length ? 'Nada próximo.' : nom + ' todavía no cargó tareas ni exámenes.'}</p>`}
+    ${agendaMama.actualizado ? `<p class="sub" style="margin:6px 0 0">Actualizado ${cuando(iso(new Date(agendaMama.actualizado)))} a las ${horaDe(agendaMama.actualizado)}.</p>` : ''}</div></div>`;
+}
+
 function vistaAjustes() {
-  return `<div class="tarjeta"><h2>Ajustes</h2>
+  return `<div class="cards"><div class="tarjeta"><h2>Ajustes</h2>
     <label class="campo"><span>Tu nombre</span><input id="aj-nombre" value="${esc(S.nombre)}"></label>
     <label class="campo"><span>Precio sugerido = costo ×</span><input id="aj-margen" type="number" inputmode="decimal" step="0.1" min="1" value="${S.margen}"></label>
     <p class="ayuda">Con 2,5 un muffin que te cuesta $400 se sugiere a $1.000.</p>
     <button class="btn primario" data-act="aj-guardar">Guardar</button></div>
-    <div class="tarjeta"><h2>Copia de seguridad</h2><p class="sub">Todo se guarda en este celu o compu. Bajate una copia de vez en cuando por si se borra.</p>
-    <div class="botones"><button class="btn" data-act="exportar">⬇️ Bajar copia</button><label class="btn" style="display:inline-block">⬆️ Cargar copia<input type="file" accept="application/json" id="importar" hidden></label></div></div>
-    <div class="tarjeta"><h2>Empezar de cero</h2><p class="sub">Borra todo lo que anotaste.</p><button class="btn peligro" data-act="borrar-todo">Borrar todo</button></div>`;
+    <div class="tarjeta"><h2>App en el celu o la compu</h2>${instalada() ? '<p class="vacio">✅ Ya está instalada.</p>' : tarjetaInstalar(true)}</div>
+    <div class="tarjeta"><h2>Chat con mamá y Dino</h2><p class="vacio">${fam.codigo ? (chatOk === 'codigo' ? '⚠️ El link de conexión no es válido.' : '✅ Conectada.') : 'Sin conectar: abrí el link de conexión en este aparato.'}</p></div>
+    <div class="tarjeta"><h2>Copia de seguridad</h2><p class="sub">Todo se guarda en este aparato. Bajate una copia de vez en cuando por si se borra (las fotos y archivos del cole no entran en la copia).</p>
+    <div class="botones"><button class="btn" data-act="exportar">⬇️ Bajar copia</button><label class="btn">⬆️ Cargar copia<input type="file" accept="application/json" id="importar" hidden></label></div></div>
+    <div class="tarjeta"><h2>Empezar de cero</h2><p class="sub">Borra todo lo que anotaste.</p><button class="btn peligro" data-act="borrar-todo">Borrar todo</button></div></div>`;
 }
 
+function pintarNav() {
+  if (esMama()) { if (ui.mama !== 'chat') render(); return; }
+  const nav = [['inicio', '🏠', 'Inicio'], ['colegio', '🎒', 'Colegio'], ['calendario', '📅', 'Calendario'], ['negocio', '🧁', 'Negocio'], ['chat', '🦖', 'Dino y mamá']];
+  const n = noLeidos();
+  document.getElementById('nav').innerHTML = nav.map(([k, i, l]) => `<button class="${ui.vista === k ? 'activa' : ''}" data-act="ir" data-v="${k}"><span>${i}</span>${l}${k === 'chat' && n ? `<b class="globo">${n}</b>` : ''}</button>`).join('');
+}
 function render() {
   const d = new Date();
-  const vistas = { inicio: vistaInicio, colegio: vistaColegio, calendario: vistaCalendario, negocio: vistaNegocio, ajustes: vistaAjustes };
-  const titulos = { inicio: S.nombre ? 'Hola, ' + esc(S.nombre) + ' 👋' : 'Mi agenda', colegio: 'Colegio', calendario: 'Calendario', negocio: 'Mi emprendimiento', ajustes: 'Ajustes' };
+  document.body.classList.toggle('mama', esMama());
+  if (esMama()) {
+    ui.vista = 'chat';
+    const nom = esc(fam.nombre || 'Valentina');
+    const tabs = `<div class="pestanas"><button class="pestana ${ui.mama === 'chat' ? 'activa' : ''}" data-act="sub-mama" data-s="chat">💬 Chat${noLeidos() ? `<span class="globo">${noLeidos()}</span>` : ''}</button><button class="pestana ${ui.mama === 'agenda' ? 'activa' : ''}" data-act="sub-mama" data-s="agenda">📅 Su agenda</button></div>`;
+    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${ui.mama === 'chat' ? '💬 Chat con ' : '📅 Agenda de '}${nom}</h1></div></header>${tabs}${ui.mama === 'chat' ? vistaChat() : vistaAgendaMama()}`;
+    if (ui.mama === 'chat') { pintarChat(true); if (noLeidos()) marcarLeidos(); }
+    return;
+  }
+  const vistas = { inicio: vistaInicio, colegio: vistaColegio, calendario: vistaCalendario, negocio: vistaNegocio, chat: vistaChat, ajustes: vistaAjustes };
+  const titulos = { inicio: S.nombre ? 'Hola, ' + esc(S.nombre) + ' 👋' : 'Mi agenda', colegio: 'Colegio', calendario: 'Calendario', negocio: 'Mi emprendimiento', chat: ui.chat === 'dino' ? 'Dino' : 'Mamá', ajustes: 'Ajustes' };
   document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.vista]}</h1></div>
     <button class="icono" data-act="ir" data-v="${ui.vista === 'ajustes' ? 'inicio' : 'ajustes'}" aria-label="Ajustes">${ui.vista === 'ajustes' ? '✕' : '⚙️'}</button></header>${vistas[ui.vista]()}`;
-  const nav = [['inicio', '🏠', 'Inicio'], ['colegio', '🎒', 'Colegio'], ['calendario', '📅', 'Calendario'], ['negocio', '🧁', 'Negocio']];
-  document.getElementById('nav').innerHTML = nav.map(([k, i, l]) => `<button class="${ui.vista === k ? 'activa' : ''}" data-act="ir" data-v="${k}"><span>${i}</span>${l}</button>`).join('');
+  pintarNav();
+  if (ui.vista === 'chat') {
+    pintarChat(true);
+    if (ui.chat === 'mama' && noLeidos()) marcarLeidos();
+  }
 }
 const listo = () => { guardarTodo(); render(); };
+
+function irADinoCon(texto, img) {
+  ui.vista = 'chat'; ui.chat = 'dino';
+  dinoAdjunto = img || null;
+  render();
+  const ta = document.getElementById('chat-texto');
+  if (ta) { ta.value = texto; ta.focus(); }
+}
 
 /* ---------- eventos ---------- */
 const buscar = (lista, id) => S[lista].find(x => x.id === id);
@@ -732,13 +1220,18 @@ const acciones = {
   'ir': el => { ui.vista = el.dataset.v; if (el.dataset.s) ui[el.dataset.v] = el.dataset.s; window.scrollTo(0, 0); render(); },
   'sub-colegio': el => { ui.colegio = el.dataset.s; render(); },
   'sub-negocio': el => { ui.negocio = el.dataset.s; render(); },
-  'poner-nombre': () => { const v = document.getElementById('in-nombre').value.trim(); if (v) { S.nombre = v; listo(); } },
+  'sub-chat': el => { ui.chat = el.dataset.s; render(); },
+  'sub-mama': el => { ui.mama = el.dataset.s; if (ui.mama === 'agenda') agendaMama = null; render(); },
+  'recargar-agenda': () => { agendaMama = null; render(); },
+  'copiar-ics': () => navigator.clipboard.writeText(agendaMama.ics).then(() => avisar('Link copiado'), () => prompt('Copiá este link:', agendaMama.ics)),
   'nueva-tarea': () => formTarea(),
   'tarea-edit': el => formTarea(buscar('tareas', el.dataset.id)),
   'tarea-ok': el => { const t = buscar('tareas', el.dataset.id); t.hecha = !t.hecha; if (t.hecha) avisar('¡Bien ahí! ✨'); listo(); },
+  'tarea-dino': el => { const t = buscar('tareas', el.dataset.id); cerrarModal(); irADinoCon(`Tengo esta tarea de ${nombreMat(t.materiaId)}: "${t.titulo}". ¿Me ayudás a arrancar?`); },
   'ver-hechas': () => { ui.verHechas = !ui.verHechas; render(); },
   'nuevo-examen': () => formExamen(),
   'examen-edit': el => formExamen(buscar('examenes', el.dataset.id)),
+  'examen-dino': el => { const e = buscar('examenes', el.dataset.id); cerrarModal(); irADinoCon(`Tengo examen de ${nombreMat(e.materiaId)} sobre "${e.tema}" ${e.fecha ? cuando(e.fecha) : ''}. ¿Me tomás preguntas para practicar?`); },
   'nueva-materia': () => formMateria(),
   'materia-edit': el => formMateria(buscar('materias', el.dataset.id)),
   'hor-agregar': el => {
@@ -747,6 +1240,17 @@ const acciones = {
       guardar: o => { if (o.m) (S.horario[d] = S.horario[d] || []).push(o.m); } });
   },
   'hor-quitar': el => { const { d, k } = el.dataset; if (confirm('¿Sacar ' + nombreMat(S.horario[d][k]) + ' del ' + DIAS_LARGOS[d] + '?')) { S.horario[d].splice(k, 1); listo(); } },
+  'subir-foto': () => document.getElementById('subir-foto').click(),
+  'subir-archivo': () => document.getElementById('subir-archivo').click(),
+  'arch-materia': el => { ui.archMateria = el.dataset.id; render(); },
+  'arch-edit': el => formArchivo(archivos.find(a => a.id === el.dataset.id)),
+  'arch-abrir': el => { const a = archivos.find(x => x.id === el.dataset.id); const w = window.open(urlDe(a), '_blank'); if (!w) { const l = document.createElement('a'); l.href = urlDe(a); l.download = a.nombre; l.click(); } },
+  'arch-dino': async el => {
+    const a = archivos.find(x => x.id === el.dataset.id);
+    cerrarModal();
+    try { irADinoCon(`Esto es de ${a.materiaId ? nombreMat(a.materiaId) : 'el cole'}${a.nota ? ' (' + a.nota + ')' : ''}. ¿Me ayudás a entenderlo?`, await achicarImagen(a.blob)); }
+    catch (e) { avisar('No pude abrir la foto'); }
+  },
   'cal-mes': el => { const [y, m] = ui.calMes.split('-').map(Number); ui.calMes = iso(new Date(y, m - 1 + Number(el.dataset.n), 1)).slice(0, 7); render(); },
   'cal-dia': el => { ui.calDia = el.dataset.f; ui.calMes = el.dataset.f.slice(0, 7); render(); },
   'nuevo-evento': () => formEvento(),
@@ -782,6 +1286,30 @@ const acciones = {
   'nuevo-gasto': () => formGasto(),
   'gasto-edit': el => formGasto(buscar('gastos', el.dataset.id)),
   'fin-mes': el => { const [y, m] = ui.finMes.split('-').map(Number); ui.finMes = iso(new Date(y, m - 1 + Number(el.dataset.n), 1)).slice(0, 7); render(); },
+  'chat-enviar': () => {
+    const ta = document.getElementById('chat-texto');
+    const t = ta.value;
+    ta.value = '';
+    ta.style.height = '';
+    if (!esMama() && ui.chat === 'dino') preguntarDino(t); else enviarMensaje(t);
+  },
+  'dino-sugerencia': el => {
+    const t = el.textContent;
+    if (t.includes('📷')) { document.getElementById('dino-foto').click(); return; }
+    preguntarDino(t);
+  },
+  'dino-foto': () => document.getElementById('dino-foto').click(),
+  'dino-sin-foto': () => { dinoAdjunto = null; pintarChat(); },
+  'dino-accion': el => {
+    const a = dino[Number(el.dataset.i)].acciones[Number(el.dataset.k)];
+    a.estado = el.dataset.r;
+    if (a.estado === 'si') { avisar(aplicarAccion(a)); guardarTodo(); }
+    guardarDino();
+    pintarChat();
+  },
+  'permiso-avisos': () => Notification.requestPermission().then(() => render()),
+  'instalar': async () => { if (!pedidoInstalar) return; pedidoInstalar.prompt(); await pedidoInstalar.userChoice.catch(() => {}); pedidoInstalar = null; render(); },
+  'ocultar-instalar': () => { S.ocultarInstalar = true; listo(); },
   'aj-guardar': () => { S.nombre = document.getElementById('aj-nombre').value.trim(); S.margen = num(document.getElementById('aj-margen').value) || 2.5; avisar('Guardado'); listo(); },
   'exportar': () => {
     const a = document.createElement('a');
@@ -789,7 +1317,7 @@ const acciones = {
     a.download = 'mi-agenda-' + hoy() + '.json';
     a.click();
   },
-  'borrar-todo': () => { if (confirm('¿Seguro? Se borra todo lo que anotaste.') && confirm('¿Segurísima?')) { S = semilla(); ui.vista = 'inicio'; listo(); } },
+  'borrar-todo': () => { if (confirm('¿Seguro? Se borra todo lo que anotaste.') && confirm('¿Segurísima?')) { S = semilla(); dino = []; guardarDino(); ui.vista = 'inicio'; listo(); } },
   'm-cerrar': () => cerrarModal(),
   'm-borrar': () => { if (confirm('¿Borrar?')) { formActual.borrar(); cerrarModal(); listo(); } }
 };
@@ -798,7 +1326,6 @@ document.addEventListener('click', e => {
   if (e.target.id === 'modal') { cerrarModal(); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  e.stopPropagation();
   acciones[el.dataset.act]?.(el);
 });
 document.addEventListener('submit', e => {
@@ -809,14 +1336,21 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('input', e => {
   const el = e.target;
+  if (el.id === 'chat-texto') { el.style.height = ''; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; return; }
   if (!recetaEdit || !el.dataset.rc) return;
   if (el.dataset.ri != null) recetaEdit.items[Number(el.dataset.ri)][el.dataset.rc] = el.value;
   else recetaEdit[el.dataset.rc] = el.value;
   if (el.dataset.rc === 'ingId') pintarReceta(); else pintarTotalReceta();
 });
-document.addEventListener('change', e => {
+document.addEventListener('change', async e => {
   const el = e.target;
   if (el.dataset.cambio === 'lista-precio') { buscar('lista', el.dataset.id).precio = num(el.value); listo(); }
+  if ((el.id === 'subir-archivo' || el.id === 'subir-foto') && el.files.length) { await guardarArchivos([...el.files]); el.value = ''; }
+  if (el.id === 'dino-foto' && el.files[0]) {
+    try { dinoAdjunto = await achicarImagen(el.files[0]); } catch (err) { avisar('No pude leer esa foto'); }
+    el.value = '';
+    pintarChat();
+  }
   if (el.id === 'importar' && el.files[0]) {
     el.files[0].text().then(t => {
       try { const d = JSON.parse(t); if (!d.materias || !d.recetas) throw 0; S = Object.assign(semilla(), d); listo(); avisar('Copia cargada ✅'); }
@@ -825,10 +1359,15 @@ document.addEventListener('change', e => {
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.id === 'in-nombre') acciones['poner-nombre']();
+  if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'chat-texto' && matchMedia('(pointer:fine)').matches) { e.preventDefault(); acciones['chat-enviar'](); }
   if (e.key === 'Escape' && !document.getElementById('modal').hidden) cerrarModal();
 });
 render();
+if (fam.codigo) {
+  traerMensajes();
+  if (!esMama()) sincronizar();
+  if (esMama() && !fam.nombre) api('hola').then(r => { if (r.nombre) { fam.nombre = r.nombre; escribir(KEY_FAMILIA, fam); render(); } }).catch(() => {});
+}
 </script>
 </body>
 </html>
