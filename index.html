@@ -197,8 +197,11 @@ a.btn.primario{color:var(--en-boton)}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
 body.mama #app{height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 body.mama nav.abajo{display:none}
+body.mama .pestanas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 10px;padding:2px 0 4px;overflow:visible}
+body.mama .pestana{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;font-size:12.5px;border-radius:14px}
+body.mama .pestana span:first-child{font-size:18px;line-height:1.1}
 body.mama .chat{flex:1;height:auto;min-height:0}
-body.mama .cards{overflow-y:auto;min-height:0}
+body.mama .mama-cuerpo{flex:1;overflow-y:auto;min-height:0}
 @media (max-width:380px){.cifra b{font-size:15px}.rapidos button{font-size:11.5px}nav.abajo button{font-size:10.5px}}
 
 /* compu */
@@ -1145,26 +1148,55 @@ function pintarChat(abajo) {
 
 let agendaMama = null;
 async function traerAgendaMama() {
-  try { agendaMama = await api('agenda'); } catch (e) { agendaMama = { error: true }; }
-  if (esMama() && ui.mama === 'agenda') render();
+  try { agendaMama = { ...(await api('agenda')), t: Date.now() }; } catch (e) { agendaMama = { error: true, t: Date.now() }; }
+  if (esMama() && ui.mama !== 'chat') render();
 }
-function vistaAgendaMama() {
+const chipNota = n => `<span class="chip ${n >= 7 ? 'verde' : n >= 4 ? 'ambar' : 'rojo'}">Nota ${String(n).replace('.', ',')}</span>`;
+function filaTareaMama(t) {
+  const n = t.fecha ? diasHasta(t.fecha) : null;
+  const chip = t.hecha ? '<span class="chip verde">✓ hecha</span>' : `<span class="chip ${n != null && n < 0 ? 'rojo' : n != null && n <= 1 ? 'ambar' : ''}">${cuando(t.fecha)}</span>`;
+  return `<div class="fila"><span class="check ${t.hecha ? 'si' : ''}" aria-hidden="true">${t.hecha ? '✓' : ''}</span><div class="cuerpo"><div class="titulo ${t.hecha ? 'tachado' : ''}">${esc(t.titulo)}</div><div class="sub">${esc(t.materia || 'Sin materia')}${t.fecha ? ' · para el ' + fechaCorta(t.fecha) : ''}</div></div>${chip}</div>`;
+}
+function filaExamenMama(e) {
+  const n = e.fecha ? diasHasta(e.fecha) : null;
+  const chip = e.nota != null ? chipNota(e.nota) : `<span class="chip ${n == null || n < 0 ? '' : n <= 3 ? 'rosa' : 'azul'}">${n == null ? 'sin fecha' : n < 0 ? 'falta la nota' : n === 0 ? '¡hoy!' : n === 1 ? 'mañana' : 'faltan ' + n + ' días'}</span>`;
+  return `<div class="fila"><span class="punto" style="background:var(--rosa)"></span><div class="cuerpo"><div class="titulo">${esc(e.materia || 'Sin materia')}: ${esc(e.tema)}</div><div class="sub">${e.fecha ? fechaCorta(e.fecha) : 'sin fecha'}</div></div>${chip}</div>`;
+}
+const tarjetaLista = (titulo, filas, vacio) => `<div class="tarjeta"><h2>${titulo}</h2>${filas.length ? filas.join('') : `<p class="vacio">${vacio}</p>`}</div>`;
+function vistaMama(tab) {
   if (!agendaMama) { traerAgendaMama(); return '<div class="tarjeta"><p class="vacio">Cargando…</p></div>'; }
   if (agendaMama.error) return '<div class="tarjeta"><p class="vacio">No se pudo cargar. ¿Hay internet?</p></div>';
-  const a = agendaMama.agenda || { tareas: [], examenes: [], eventos: [] };
+  const a = { tareas: [], examenes: [], eventos: [], ...(agendaMama.agenda || {}) };
   const nom = esc(fam.nombre || 'Valentina');
-  const items = [
-    ...a.tareas.filter(t => t.fecha && diasHasta(t.fecha) >= -7).map(t => ({ f: t.fecha, html: `<div class="fila"><span class="punto" style="background:var(--azul)"></span><div class="cuerpo"><div class="titulo ${t.hecha ? 'tachado' : ''}">📝 ${esc(t.titulo)}</div><div class="sub">${esc(t.materia || 'Sin materia')}</div></div><span class="chip ${t.hecha ? 'verde' : diasHasta(t.fecha) < 0 ? 'rojo' : ''}">${t.hecha ? '✓ hecha' : cuando(t.fecha)}</span></div>` })),
-    ...a.examenes.filter(e => e.fecha && diasHasta(e.fecha) >= -14).map(e => ({ f: e.fecha, html: `<div class="fila"><span class="punto" style="background:var(--rosa)"></span><div class="cuerpo"><div class="titulo">📚 Examen de ${esc(e.materia || '?')}: ${esc(e.tema)}</div></div><span class="chip ${e.nota != null ? (e.nota >= 7 ? 'verde' : e.nota >= 4 ? 'ambar' : 'rojo') : 'rosa'}">${e.nota != null ? 'Nota ' + e.nota : cuando(e.fecha)}</span></div>` })),
-    ...a.eventos.filter(e => e.fecha && diasHasta(e.fecha) >= 0).map(e => ({ f: e.fecha, html: `<div class="fila"><span class="punto" style="background:var(--violeta)"></span><div class="cuerpo"><div class="titulo">${emojiEvento(e.tipo)} ${esc(e.titulo)}</div></div><span class="chip violeta">${cuando(e.fecha)}</span></div>` }))
-  ].sort((x, y) => x.f.localeCompare(y.f));
-  const atrasadas = a.tareas.filter(t => !t.hecha && t.fecha && diasHasta(t.fecha) < 0).length;
+  const pie = `<p class="sub" style="margin:2px 0 10px;display:flex;align-items:center;gap:8px">${agendaMama.actualizado ? `${nom} la actualizó ${cuando(iso(new Date(agendaMama.actualizado)))} a las ${horaDe(agendaMama.actualizado)}` : `${nom} todavía no abrió su agenda conectada.`}<button class="btn chico" data-act="recargar-agenda" aria-label="Actualizar">↻</button></p>`;
+  const porFecha = (x, y) => (x.fecha || '9').localeCompare(y.fecha || '9');
+  if (tab === 'tareas') {
+    const pend = a.tareas.filter(t => !t.hecha).sort(porFecha);
+    const atrasadas = pend.filter(t => t.fecha && diasHasta(t.fecha) < 0);
+    const semana = pend.filter(t => !t.fecha || (diasHasta(t.fecha) >= 0 && diasHasta(t.fecha) < 7));
+    const despues = pend.filter(t => t.fecha && diasHasta(t.fecha) >= 7);
+    const hechas = a.tareas.filter(t => t.hecha).sort((x, y) => porFecha(y, x));
+    return `${pie}<div class="cifras" style="margin-bottom:10px"><div class="cifra"><small>Pendientes</small><b>${pend.length}</b></div><div class="cifra rosa"><small>Atrasadas</small><b>${atrasadas.length}</b></div><div class="cifra verde"><small>Hechas</small><b>${hechas.length}</b></div></div>
+      <div class="cards">${atrasadas.length ? tarjetaLista('⚠️ Atrasadas', atrasadas.map(filaTareaMama), '') : ''}
+      ${tarjetaLista('Esta semana', semana.map(filaTareaMama), 'Nada para esta semana.')}
+      ${despues.length ? tarjetaLista('Más adelante', despues.map(filaTareaMama), '') : ''}
+      ${tarjetaLista('Últimas hechas', hechas.slice(0, 10).map(filaTareaMama), 'Todavía no marcó tareas como hechas.')}</div>`;
+  }
+  if (tab === 'examenes') {
+    const prox = a.examenes.filter(e => e.fecha && diasHasta(e.fecha) >= 0).sort(porFecha);
+    const rendidos = a.examenes.filter(e => !e.fecha || diasHasta(e.fecha) < 0).sort((x, y) => porFecha(y, x));
+    const notas = {};
+    a.examenes.filter(e => e.nota != null).forEach(e => { (notas[e.materia || 'Sin materia'] = notas[e.materia || 'Sin materia'] || []).push(e.nota); });
+    const proms = Object.entries(notas).map(([m, ns]) => [m, ns.reduce((s, n) => s + n, 0) / ns.length, ns.length]).sort((x, y) => x[0].localeCompare(y[0]));
+    return `${pie}<div class="cards">${tarjetaLista('Próximos', prox.map(filaExamenMama), 'No tiene exámenes anotados.')}
+      ${proms.length ? tarjetaLista('Promedios', proms.map(([m, p, c]) => `<div class="fila"><div class="cuerpo"><div class="titulo">${esc(m)}</div><div class="sub">${c} nota${c === 1 ? '' : 's'}</div></div>${chipNota(Math.round(p * 10) / 10)}</div>`), '') : ''}
+      ${rendidos.length ? tarjetaLista('Ya rendidos', rendidos.slice(0, 20).map(filaExamenMama), '') : ''}</div>`;
+  }
   const webcal = agendaMama.ics.replace(/^https:/, 'webcal:');
-  return `<div class="cards"><div class="tarjeta"><h2>📅 En tu calendario</h2><p class="sub" style="margin:0 0 8px">Las tareas y exámenes de ${nom} aparecen solos en el calendario de tu celu y se actualizan cada tanto.</p>
+  const evs = a.eventos.filter(e => e.fecha && diasHasta(e.fecha) >= 0).sort(porFecha);
+  return `${pie}<div class="cards"><div class="tarjeta"><h2>📅 En tu calendario</h2><p class="sub" style="margin:0 0 8px">Las tareas y exámenes de ${nom} aparecen solos en el calendario de tu celu y se actualizan cada tanto.</p>
     <div class="botones"><a class="btn primario chico" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}" target="_blank" rel="noopener">Google Calendar</a><a class="btn chico" href="${esc(webcal)}">iPhone / otro</a><button class="btn chico" data-act="copiar-ics">Copiar link</button></div></div>
-    ${atrasadas ? `<div class="aviso">⚠️ ${nom} tiene ${atrasadas} tarea${atrasadas === 1 ? '' : 's'} atrasada${atrasadas === 1 ? '' : 's'}.</div>` : ''}
-    <div class="tarjeta"><h2>Lo que viene <button class="btn chico" data-act="recargar-agenda" aria-label="Actualizar">↻</button></h2>${items.length ? items.map(x => x.html).join('') : `<p class="vacio">${a.tareas.length ? 'Nada próximo.' : nom + ' todavía no cargó tareas ni exámenes.'}</p>`}
-    ${agendaMama.actualizado ? `<p class="sub" style="margin:6px 0 0">Actualizado ${cuando(iso(new Date(agendaMama.actualizado)))} a las ${horaDe(agendaMama.actualizado)}.</p>` : ''}</div></div>`;
+    ${tarjetaLista('Eventos', evs.map(e => `<div class="fila"><span class="punto" style="background:var(--violeta)"></span><div class="cuerpo"><div class="titulo">${emojiEvento(e.tipo)} ${esc(e.titulo)}</div></div><span class="chip violeta">${cuando(e.fecha)}</span></div>`), 'No tiene eventos próximos.')}</div>`;
 }
 
 function vistaAjustes() {
@@ -1192,8 +1224,10 @@ function render() {
   if (esMama()) {
     ui.vista = 'chat';
     const nom = esc(fam.nombre || 'Valentina');
-    const tabs = `<div class="pestanas"><button class="pestana ${ui.mama === 'chat' ? 'activa' : ''}" data-act="sub-mama" data-s="chat">💬 Chat${noLeidos() ? `<span class="globo">${noLeidos()}</span>` : ''}</button><button class="pestana ${ui.mama === 'agenda' ? 'activa' : ''}" data-act="sub-mama" data-s="agenda">📅 Su agenda</button></div>`;
-    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${ui.mama === 'chat' ? '💬 Chat con ' : '📅 Agenda de '}${nom}</h1></div></header>${tabs}${ui.mama === 'chat' ? vistaChat() : vistaAgendaMama()}`;
+    const pest = [['chat', '💬', 'Chat'], ['tareas', '📝', 'Tareas'], ['examenes', '📚', 'Exámenes'], ['calendario', '📅', 'Calendario']];
+    const titulos = { chat: '💬 Chat con ', tareas: '📝 Tareas de ', examenes: '📚 Exámenes de ', calendario: '📅 Calendario de ' };
+    const tabs = `<div class="pestanas">${pest.map(([k, i, l]) => `<button class="pestana ${ui.mama === k ? 'activa' : ''}" data-act="sub-mama" data-s="${k}"><span>${i}</span>${l}${k === 'chat' && noLeidos() ? `<span class="globo">${noLeidos()}</span>` : ''}</button>`).join('')}</div>`;
+    document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.mama]}${nom}</h1></div></header>${tabs}${ui.mama === 'chat' ? vistaChat() : `<div class="mama-cuerpo">${vistaMama(ui.mama)}</div>`}`;
     if (ui.mama === 'chat') { pintarChat(true); if (noLeidos()) marcarLeidos(); }
     return;
   }
@@ -1224,7 +1258,7 @@ const acciones = {
   'sub-colegio': el => { ui.colegio = el.dataset.s; render(); },
   'sub-negocio': el => { ui.negocio = el.dataset.s; render(); },
   'sub-chat': el => { ui.chat = el.dataset.s; render(); },
-  'sub-mama': el => { ui.mama = el.dataset.s; if (ui.mama === 'agenda') agendaMama = null; render(); },
+  'sub-mama': el => { ui.mama = el.dataset.s; if (ui.mama !== 'chat' && agendaMama && Date.now() - agendaMama.t > 30000) agendaMama = null; render(); },
   'recargar-agenda': () => { agendaMama = null; render(); },
   'copiar-ics': () => navigator.clipboard.writeText(agendaMama.ics).then(() => avisar('Link copiado'), () => prompt('Copiá este link:', agendaMama.ics)),
   'nueva-tarea': () => formTarea(),
