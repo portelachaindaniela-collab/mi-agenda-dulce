@@ -81,6 +81,8 @@ nav.abajo button.activa{color:var(--rosa);background:var(--rosa-soft)}
 .chip.verde{background:var(--verde-soft);color:var(--verde)} .chip.ambar{background:var(--ambar-soft);color:var(--ambar)}
 .chip.rojo{background:var(--rojo-soft);color:var(--rojo)} .chip.violeta{background:var(--violeta-soft);color:var(--violeta)}
 button.chip{border:0;cursor:pointer}
+a.btn{text-decoration:none;color:inherit}
+a.btn.primario{color:var(--en-boton)}
 .btn{border:0;border-radius:13px;padding:10px 15px;font-weight:800;cursor:pointer;background:var(--inset);display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn.primario{background:var(--rosa);color:var(--en-boton)}
 .btn.peligro{background:var(--rojo-soft);color:var(--rojo)}
@@ -195,7 +197,7 @@ button.chip{border:0;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
 body.mama #app{padding-bottom:12px}
 body.mama nav.abajo{display:none}
-body.mama .chat{height:calc(100dvh - 90px)}
+body.mama .chat{height:calc(100dvh - 140px - env(safe-area-inset-bottom))}
 @media (max-width:380px){.cifra b{font-size:15px}.rapidos button{font-size:11.5px}nav.abajo button{font-size:10.5px}}
 
 /* compu */
