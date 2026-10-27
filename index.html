@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mi Agenda Dulce</title>
+<meta name="theme-color" content="#fbf6f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbf6f0; --card:#fff; --inset:#f4ece3; --ink:#2b2230; --muted:#7a6d78; --line:#eadfd4;
+  --rosa:#d23f72; --rosa-soft:#fde4ec; --azul:#4562d0; --azul-soft:#e3e9ff;
+  --verde:#24865a; --verde-soft:#dcf2e6; --ambar:#b5700c; --ambar-soft:#fcefd8;
+  --rojo:#c8402f; --rojo-soft:#fbe3e0; --violeta:#7c4fcc; --violeta-soft:#efe6fd;
+  --sombra:0 1px 2px rgba(60,30,40,.06),0 4px 14px rgba(60,30,40,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1619; --card:#241f23; --inset:#2e282c; --ink:#f3ecef; --muted:#b3a5ae; --line:#3a3237;
+    --rosa:#ff7ea6; --rosa-soft:#3d2230; --azul:#8ea3ff; --azul-soft:#232a48;
+    --verde:#6fd3a0; --verde-soft:#1b3328; --ambar:#f0b55a; --ambar-soft:#3a2c15;
+    --rojo:#ff8f80; --rojo-soft:#3e2220; --violeta:#bb9cff; --violeta-soft:#2f2545;
+    --sombra:0 1px 2px rgba(0,0,0,.3); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1a1619; --card:#241f23; --inset:#2e282c; --ink:#f3ecef; --muted:#b3a5ae; --line:#3a3237;
+  --rosa:#ff7ea6; --rosa-soft:#3d2230; --azul:#8ea3ff; --azul-soft:#232a48;
+  --verde:#6fd3a0; --verde-soft:#1b3328; --ambar:#f0b55a; --ambar-soft:#3a2c15;
+  --rojo:#ff8f80; --rojo-soft:#3e2220; --violeta:#bb9cff; --violeta-soft:#2f2545;
+  --sombra:0 1px 2px rgba(0,0,0,.3); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 Nunito,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+header h1{font-size:22px;margin:0;font-weight:800}
+header small{color:var(--muted);display:block;font-weight:600}
+.icono{border:0;background:var(--card);box-shadow:var(--sombra);width:42px;height:42px;border-radius:14px;font-size:20px;cursor:pointer}
+.tarjeta{background:var(--card);border-radius:20px;box-shadow:var(--sombra);padding:16px;margin-bottom:14px}
+.tarjeta h2{font-size:17px;margin:0 0 10px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tarjeta h2 .mini{font-size:14px}
+.sub{color:var(--muted);font-size:14px}
+.vacio{color:var(--muted);font-size:14px;padding:6px 0}
+.pestanas{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 14px;padding:2px 16px 4px;scrollbar-width:none}
+.pestanas::-webkit-scrollbar{display:none}
+.pestana{flex:none;border:0;border-radius:999px;padding:8px 14px;background:var(--card);box-shadow:var(--sombra);font-weight:700;cursor:pointer}
+.pestana.activa{background:var(--ink);color:var(--bg)}
+nav.abajo{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav.abajo div{display:flex;max-width:560px;width:100%}
+nav.abajo button{flex:1;border:0;background:none;padding:6px 2px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.abajo button span{font-size:22px;line-height:1}
+nav.abajo button.activa{color:var(--rosa);background:var(--rosa-soft)}
+.fila{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.fila:first-of-type{border-top:0}
+.fila .cuerpo{flex:1;min-width:0}
+.fila .titulo{font-weight:700;overflow-wrap:anywhere}
+.fila .titulo.tachado{text-decoration:line-through;color:var(--muted)}
+.tocable{cursor:pointer}
+.check{flex:none;width:26px;height:26px;border-radius:9px;border:2px solid var(--line);background:var(--inset);cursor:pointer;display:grid;place-items:center;font-size:15px;color:#fff;padding:0}
+.check.si{background:var(--verde);border-color:var(--verde)}
+.punto{flex:none;width:10px;height:10px;border-radius:50%;display:inline-block}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--inset);white-space:nowrap}
+.chip.rosa{background:var(--rosa-soft);color:var(--rosa)}
+.chip.azul{background:var(--azul-soft);color:var(--azul)}
+.chip.verde{background:var(--verde-soft);color:var(--verde)}
+.chip.ambar{background:var(--ambar-soft);color:var(--ambar)}
+.chip.rojo{background:var(--rojo-soft);color:var(--rojo)}
+.chip.violeta{background:var(--violeta-soft);color:var(--violeta)}
+button.chip{border:0;cursor:pointer}
+.btn{border:0;border-radius:14px;padding:11px 16px;font-weight:800;cursor:pointer;background:var(--inset)}
+.btn.primario{background:var(--rosa);color:#fff}
+:root[data-theme="dark"] .btn.primario{color:#2b1420}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primario{color:#2b1420}}
+.btn.peligro{background:var(--rojo-soft);color:var(--rojo)}
+.btn.chico{padding:7px 12px;font-size:14px;border-radius:11px}
+.btn.ancho{width:100%}
+.botones{display:flex;flex-wrap:wrap;gap:8px}
+.rapidos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.rapidos button{border:0;background:var(--card);box-shadow:var(--sombra);border-radius:16px;padding:10px 4px;font-weight:700;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.rapidos button span{font-size:22px}
+.cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cifra{background:var(--inset);border-radius:14px;padding:10px}
+.cifra b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.cifra small{color:var(--muted);font-weight:700;font-size:12px}
+.cifra.verde b{color:var(--verde)} .cifra.rosa b{color:var(--rosa)}
+.monto{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.aviso{background:var(--ambar-soft);color:var(--ambar);border-radius:14px;padding:10px 12px;font-size:14px;font-weight:600;margin-bottom:12px}
+.ok{background:var(--verde-soft);color:var(--verde)}
+.cal-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-cab b{font-size:18px;text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .dsem{font-size:12px;color:var(--muted);font-weight:700;padding-bottom:4px}
+.cal button{border:0;background:var(--inset);border-radius:12px;aspect-ratio:1;padding:2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:700;min-width:0}
+.cal button.fuera{opacity:.35}
+.cal button.hoy{outline:2px solid var(--rosa)}
+.cal button.sel{background:var(--ink);color:var(--bg)}
+.cal .puntos{display:flex;gap:2px;height:6px}
+.cal .puntos i{width:6px;height:6px;border-radius:50%}
+.leyenda{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);margin-top:10px}
+.leyenda span{display:inline-flex;align-items:center;gap:5px}
+.horario{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.horario .dia{background:var(--inset);border-radius:12px;padding:6px;min-width:0}
+.horario .dia b{display:block;text-align:center;font-size:13px;margin-bottom:4px}
+.horario .dia.hoy{outline:2px solid var(--rosa)}
+.horario .mat{display:block;width:100%;border:0;border-radius:8px;padding:4px 2px;font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.horario .mas{display:block;width:100%;border:1px dashed var(--muted);background:none;border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted)}
+.barras{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:6px}
+.barras .mes{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.barras .par{display:flex;gap:3px;align-items:flex-end;height:100%;width:100%;justify-content:center}
+.barras .par i{display:block;width:40%;max-width:16px;border-radius:5px 5px 2px 2px;min-height:2px}
+.barras small{font-size:12px;color:var(--muted);font-weight:700}
+.receta-costos{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
+.receta-costos div{background:var(--inset);border-radius:10px;padding:6px 9px;font-size:13px}
+.receta-costos b{display:block;font-size:15px}
+.stepper{display:flex;align-items:center;gap:4px}
+.stepper button{width:28px;height:28px;border-radius:9px;border:0;background:var(--inset);font-weight:800;cursor:pointer}
+.stepper span{min-width:20px;text-align:center;font-weight:800}
+.precio-in{width:84px;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);text-align:right}
+#modal{position:fixed;inset:0;background:rgba(20,10,16,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+#modal[hidden]{display:none}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet h2{margin:0 0 12px;font-size:19px}
+.campo{display:block;margin-bottom:12px}
+.campo span{display:block;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.campo input,.campo select,.campo textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--inset);outline:none}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--rosa)}
+.campo textarea{min-height:90px;resize:vertical}
+.campo.tilde{display:flex;align-items:center;gap:10px}
+.campo.tilde input{width:22px;height:22px}
+.campo.tilde span{margin:0;color:var(--ink)}
+.ayuda{font-size:13px;color:var(--muted);margin:-6px 0 12px}
+.acciones{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+.acciones .izq{margin-right:auto}
+.item-receta{display:grid;grid-template-columns:1fr 78px 34px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.item-receta select,.item-receta input{padding:9px 8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);width:100%;min-width:0}
+.item-receta .u{font-size:13px;color:var(--muted);font-weight:700}
+.item-receta button{border:0;background:var(--rojo-soft);color:var(--rojo);border-radius:9px;height:30px;cursor:pointer}
+.total-receta{background:var(--verde-soft);color:var(--verde);border-radius:12px;padding:10px 12px;font-weight:700;margin:6px 0 12px}
+.pasos{white-space:pre-wrap;font-size:14px;color:var(--muted);margin-top:8px}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;box-shadow:var(--sombra);max-width:calc(100% - 32px);text-align:center}
+@media (max-width:380px){.cifra b{font-size:16px}.rapidos button{font-size:12px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="abajo"><div id="nav"></div></nav>
+<div id="modal" hidden></div>
+<script>
+const KEY = 'agenda-dulce-v1';
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const COLORES = [['#e0527a', 'Rosa'], ['#4f6bd8', 'Azul'], ['#2f9e6b', 'Verde'], ['#c9821a', 'Naranja'], ['#8a5cd6', 'Violeta'], ['#1f9bb0', 'Celeste'], ['#d24b3e', 'Rojo'], ['#6b7a8f', 'Gris']];
+const UNIDADES = [['g', 'gramos (g)'], ['ml', 'mililitros (ml)'], ['u', 'unidades']];
+const TIPOS_EVENTO = [['cumple', '🎂 Cumple'], ['salida', '🎉 Salida'], ['cole', '🏫 Cole'], ['negocio', '🧁 Negocio'], ['otro', '⭐ Otro']];
+
+const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const hoy = () => iso(new Date());
+const aFecha = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const diasHasta = s => Math.round((aFecha(s) - aFecha(hoy())) / 864e5);
+const fechaCorta = s => { const d = aFecha(s); return DIAS[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); };
+const cuando = s => {
+  if (!s) return 'sin fecha';
+  const n = diasHasta(s);
+  if (n === 0) return 'hoy';
+  if (n === 1) return 'mañana';
+  if (n === -1) return 'ayer';
+  if (n < 0) return 'hace ' + (-n) + ' días';
+  if (n < 7) return 'en ' + n + ' días';
+  return fechaCorta(s);
+};
+const plata = n => (n < 0 ? '-$' : '$') + Math.round(Math.abs(n || 0)).toLocaleString('es-AR');
+const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mesDe = s => s ? s.slice(0, 7) : '';
+
+function semilla() {
+  const ingredientes = [
+    ['Harina 0000', 1000, 'g', 1200], ['Azúcar', 1000, 'g', 1300], ['Huevos', 12, 'u', 3500],
+    ['Manteca', 200, 'g', 2800], ['Leche', 1000, 'ml', 1500], ['Aceite', 900, 'ml', 3000],
+    ['Polvo de hornear', 50, 'g', 900], ['Chips de chocolate', 150, 'g', 2500],
+    ['Limones', 1, 'u', 300], ['Pirotines', 50, 'u', 1500]
+  ].map(([nombre, cantidad, unidad, precio]) => ({ id: uid(), nombre, cantidad, unidad, precio }));
+  const ing = n => ingredientes.find(i => i.nombre === n).id;
+  const materias = [['Matemática', 0], ['Lengua', 1], ['Inglés', 2], ['Historia', 3], ['Biología', 4], ['Ed. Física', 5]]
+    .map(([nombre, c]) => ({ id: uid(), nombre, color: COLORES[c][0], profe: '' }));
+  return {
+    nombre: '', margen: 2.5, ejemplos: true,
+    materias, horario: { 1: [], 2: [], 3: [], 4: [], 5: [] },
+    tareas: [], examenes: [], eventos: [],
+    ingredientes,
+    recetas: [
+      { id: uid(), nombre: 'Budín de limón', rinde: 1, precio: 0, pasos: '', items: [
+        { ingId: ing('Harina 0000'), cant: 200 }, { ingId: ing('Azúcar'), cant: 180 }, { ingId: ing('Huevos'), cant: 3 },
+        { ingId: ing('Aceite'), cant: 100 }, { ingId: ing('Leche'), cant: 120 }, { ingId: ing('Polvo de hornear'), cant: 10 },
+        { ingId: ing('Limones'), cant: 2 }] },
+      { id: uid(), nombre: 'Muffins con chips', rinde: 12, precio: 0, pasos: '', items: [
+        { ingId: ing('Harina 0000'), cant: 250 }, { ingId: ing('Azúcar'), cant: 150 }, { ingId: ing('Huevos'), cant: 2 },
+        { ingId: ing('Manteca'), cant: 100 }, { ingId: ing('Leche'), cant: 200 }, { ingId: ing('Polvo de hornear'), cant: 10 },
+        { ingId: ing('Chips de chocolate'), cant: 100 }, { ingId: ing('Pirotines'), cant: 12 }] }
+    ],
+    lista: [], ventas: [], gastos: []
+  };
+}
+
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
+if (!S || typeof S !== 'object') S = semilla();
+S = Object.assign(semilla(), S);
+
+const guardarTodo = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+const ui = { vista: 'inicio', colegio: 'tareas', negocio: 'super', calMes: hoy().slice(0, 7), calDia: hoy(), finMes: hoy().slice(0, 7), verHechas: false };
+
+const materia = id => S.materias.find(m => m.id === id);
+const ingrediente = id => S.ingredientes.find(i => i.id === id);
+const receta = id => S.recetas.find(r => r.id === id);
+const colorMat = id => materia(id)?.color || '#6b7a8f';
+const nombreMat = id => materia(id)?.nombre || 'Sin materia';
+const unidadCorta = u => u === 'u' ? 'u' : u;
+
+const costoItem = it => { const i = ingrediente(it.ingId); return i && i.cantidad ? i.precio / i.cantidad * num(it.cant) : 0; };
+const costoReceta = r => r.items.reduce((s, it) => s + costoItem(it), 0);
+const costoUnidad = r => costoReceta(r) / (num(r.rinde) || 1);
+const redondeo = n => Math.ceil(n / 50) * 50;
+const precioSugerido = r => redondeo(costoUnidad(r) * (num(S.margen) || 2.5));
+const precioReceta = r => num(r.precio) || precioSugerido(r);
+const totalVenta = v => num(v.cant) * num(v.precioUnit);
+
+function resumenMes(mes) {
+  const ventas = S.ventas.filter(v => mesDe(v.fecha) === mes);
+  const ganado = ventas.filter(v => v.pagado).reduce((s, v) => s + totalVenta(v), 0);
+  const porCobrar = S.ventas.filter(v => !v.pagado).reduce((s, v) => s + totalVenta(v), 0);
+  const gastado = S.gastos.filter(g => mesDe(g.fecha) === mes).reduce((s, g) => s + num(g.monto), 0);
+  return { ganado, gastado, ganancia: ganado - gastado, porCobrar, ventas };
+}
+
+function avisar(texto) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = texto;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2400);
+}
+
+/* ---------- formularios ---------- */
+let formActual = null;
+function campoHTML(c, v) {
+  const val = v ?? c.valor ?? '';
+  if (c.tipo === 'select') {
+    return `<label class="campo"><span>${c.label}</span><select name="${c.nombre}">${c.opciones.map(([o, l]) => `<option value="${esc(o)}" ${String(o) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
+  }
+  if (c.tipo === 'check') return `<label class="campo tilde"><input type="checkbox" name="${c.nombre}" ${val ? 'checked' : ''}><span>${c.label}</span></label>`;
+  if (c.tipo === 'textarea') return `<label class="campo"><span>${c.label}</span><textarea name="${c.nombre}" placeholder="${esc(c.ph || '')}">${esc(val)}</textarea></label>`;
+  const tipo = c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text';
+  const extra = c.tipo === 'numero' ? 'inputmode="decimal" step="any" min="0"' : '';
+  return `<label class="campo"><span>${c.label}</span><input type="${tipo}" name="${c.nombre}" value="${esc(val)}" placeholder="${esc(c.ph || '')}" ${extra} ${c.requerido ? 'required' : ''}></label>${c.ayuda ? `<p class="ayuda">${c.ayuda}</p>` : ''}`;
+}
+function abrirForm({ titulo, campos, valores = {}, guardar, borrar, textoGuardar = 'Guardar' }) {
+  formActual = { campos, guardar, borrar };
+  const m = document.getElementById('modal');
+  m.innerHTML = `<div class="sheet"><h2>${titulo}</h2><form id="f">${campos.map(c => campoHTML(c, valores[c.nombre])).join('')}
+    <div class="acciones">${borrar ? '<button type="button" class="btn peligro izq" data-act="m-borrar">Borrar</button>' : ''}
+    <button type="button" class="btn" data-act="m-cerrar">Cancelar</button><button class="btn primario">${textoGuardar}</button></div></form></div>`;
+  m.hidden = false;
+  const primero = m.querySelector('input[type=text],input[type=number]');
+  if (primero && !primero.value) setTimeout(() => primero.focus(), 50);
+}
+function cerrarModal() { const m = document.getElementById('modal'); m.hidden = true; m.innerHTML = ''; formActual = null; }
+function leerForm(form) {
+  const o = {};
+  for (const c of formActual.campos) {
+    const el = form.elements[c.nombre];
+    if (!el) continue;
+    if (c.tipo === 'check') o[c.nombre] = el.checked;
+    else if (c.tipo === 'numero') o[c.nombre] = el.value === '' ? '' : num(el.value);
+    else o[c.nombre] = el.value.trim();
+  }
+  return o;
+}
+const opcionesMaterias = () => [['', '— elegir —'], ...S.materias.map(m => [m.id, m.nombre])];
+
+/* ---------- acciones de colegio ---------- */
+function formTarea(t = {}) {
+  abrirForm({
+    titulo: t.id ? 'Editar tarea' : 'Nueva tarea',
+    campos: [
+      { nombre: 'titulo', label: '¿Qué hay que hacer?', ph: 'Ej: ejercicios pág. 34', requerido: true },
+      { nombre: 'materiaId', label: 'Materia', tipo: 'select', opciones: opcionesMaterias() },
+      { nombre: 'fecha', label: '¿Para cuándo?', tipo: 'fecha', valor: hoy() }
+    ],
+    valores: t,
+    guardar: o => { if (t.id) Object.assign(t, o); else S.tareas.push({ id: uid(), hecha: false, ...o }); },
+    borrar: t.id && (() => { S.tareas = S.tareas.filter(x => x !== t); })
+  });
+}
+function formExamen(e = {}) {
+  abrirForm({
+    titulo: e.id ? 'Editar examen' : 'Nuevo examen',
+    campos: [
+      { nombre: 'materiaId', label: 'Materia', tipo: 'select', opciones: opcionesMaterias() },
+      { nombre: 'tema', label: 'Tema', ph: 'Ej: fracciones y decimales', requerido: true },
+      { nombre: 'fecha', label: 'Fecha', tipo: 'fecha', valor: hoy() },
+      { nombre: 'nota', label: 'Nota (cuando te la den)', tipo: 'numero', ph: 'Ej: 8', ayuda: 'Con las notas calculo solo tu promedio por materia.' }
+    ],
+    valores: e,
+    guardar: o => { if (e.id) Object.assign(e, o); else S.examenes.push({ id: uid(), ...o }); },
+    borrar: e.id && (() => { S.examenes = S.examenes.filter(x => x !== e); })
+  });
+}
+function formMateria(m = {}) {
+  abrirForm({
+    titulo: m.id ? 'Editar materia' : 'Nueva materia',
+    campos: [
+      { nombre: 'nombre', label: 'Nombre', requerido: true },
+      { nombre: 'profe', label: 'Profe', ph: 'Opcional' },
+      { nombre: 'color', label: 'Color', tipo: 'select', opciones: COLORES, valor: COLORES[0][0] }
+    ],
+    valores: m,
+    guardar: o => { if (m.id) Object.assign(m, o); else S.materias.push({ id: uid(), ...o }); },
+    borrar: m.id && (() => {
+      S.materias = S.materias.filter(x => x !== m);
+      for (const d in S.horario) S.horario[d] = S.horario[d].filter(id => id !== m.id);
+    })
+  });
+}
+function formEvento(ev = {}) {
+  abrirForm({
+    titulo: ev.id ? 'Editar evento' : 'Nuevo evento',
+    campos: [
+      { nombre: 'titulo', label: '¿Qué es?', ph: 'Ej: cumple de Sofi', requerido: true },
+      { nombre: 'fecha', label: 'Fecha', tipo: 'fecha', valor: ui.calDia },
+      { nombre: 'tipo', label: 'Tipo', tipo: 'select', opciones: TIPOS_EVENTO }
+    ],
+    valores: ev,
+    guardar: o => { if (ev.id) Object.assign(ev, o); else S.eventos.push({ id: uid(), ...o }); },
+    borrar: ev.id && (() => { S.eventos = S.eventos.filter(x => x !== ev); })
+  });
+}
+
+/* ---------- acciones del negocio ---------- */
+function formIngrediente(i = {}) {
+  abrirForm({
+    titulo: i.id ? 'Editar producto del súper' : 'Nuevo producto del súper',
+    campos: [
+      { nombre: 'nombre', label: 'Producto', ph: 'Ej: Harina 0000', requerido: true },
+      { nombre: 'cantidad', label: '¿Cuánto trae el paquete?', tipo: 'numero', ph: 'Ej: 1000', requerido: true },
+      { nombre: 'unidad', label: 'Medido en', tipo: 'select', opciones: UNIDADES },
+      { nombre: 'precio', label: '¿Cuánto sale el paquete?', tipo: 'numero', ph: 'Ej: 1200', requerido: true, ayuda: 'Si cambia el precio, tus recetas se recalculan solas.' }
+    ],
+    valores: i,
+    guardar: o => { if (i.id) Object.assign(i, o); else S.ingredientes.push({ id: uid(), ...o }); },
+    borrar: i.id && (() => { S.ingredientes = S.ingredientes.filter(x => x !== i); S.lista = S.lista.filter(l => l.ingId !== i.id); })
+  });
+}
+function formItemLista() {
+  abrirForm({
+    titulo: 'Agregar a la lista',
+    campos: [
+      { nombre: 'ingId', label: 'Producto', tipo: 'select', opciones: [...S.ingredientes.map(i => [i.id, i.nombre]), ['__otro', 'Otra cosa…']] },
+      { nombre: 'otro', label: 'Si es otra cosa, ¿qué?', ph: 'Ej: cajitas, moños' },
+      { nombre: 'paquetes', label: '¿Cuántos?', tipo: 'numero', valor: 1 },
+      { nombre: 'precio', label: 'Precio de cada uno (si es otra cosa)', tipo: 'numero', ph: 'Opcional' }
+    ],
+    guardar: o => {
+      const cuantos = Math.max(1, Math.round(num(o.paquetes) || 1));
+      if (o.ingId === '__otro') {
+        if (!o.otro) { avisar('Escribí qué querés agregar'); return false; }
+        S.lista.push({ id: uid(), ingId: null, nombre: o.otro, paquetes: cuantos, precio: num(o.precio), check: false });
+      } else sumarALista(o.ingId, cuantos);
+    }
+  });
+}
+function sumarALista(ingId, paquetes) {
+  const i = ingrediente(ingId);
+  if (!i) return;
+  const ya = S.lista.find(l => l.ingId === ingId);
+  if (ya) ya.paquetes += paquetes;
+  else S.lista.push({ id: uid(), ingId, nombre: i.nombre, paquetes, precio: num(i.precio), check: false });
+}
+function formListaDesdeReceta(rId) {
+  abrirForm({
+    titulo: 'Comprar para una receta',
+    campos: [
+      { nombre: 'recetaId', label: 'Receta', tipo: 'select', opciones: S.recetas.map(r => [r.id, r.nombre]), valor: rId },
+      { nombre: 'tandas', label: '¿Cuántas veces la vas a hacer?', tipo: 'numero', valor: 1, ayuda: 'Calculo cuántos paquetes de cada cosa necesitás.' }
+    ],
+    textoGuardar: 'Agregar a la lista',
+    guardar: o => {
+      const r = receta(o.recetaId);
+      if (!r) return false;
+      const tandas = num(o.tandas) || 1;
+      let n = 0;
+      for (const it of r.items) {
+        const i = ingrediente(it.ingId);
+        if (!i || !num(i.cantidad)) continue;
+        sumarALista(i.id, Math.ceil(num(it.cant) * tandas / num(i.cantidad)));
+        n++;
+      }
+      setTimeout(() => avisar(`Agregué ${n} productos a tu lista 🛒`), 50);
+      ui.vista = 'negocio'; ui.negocio = 'lista';
+    }
+  });
+}
+function formTerminarCompra() {
+  const comprados = S.lista.filter(l => l.check);
+  if (!comprados.length) { avisar('Primero tildá lo que compraste'); return; }
+  const total = comprados.reduce((s, l) => s + l.paquetes * num(l.precio), 0);
+  abrirForm({
+    titulo: 'Terminé de comprar',
+    campos: [
+      { nombre: 'monto', label: '¿Cuánto pagaste en total?', tipo: 'numero', valor: Math.round(total), ayuda: 'Ya lo calculé con los precios de la lista. Cambialo si en la caja salió distinto.' },
+      { nombre: 'fecha', label: 'Fecha', tipo: 'fecha', valor: hoy() }
+    ],
+    textoGuardar: 'Anotar gasto',
+    guardar: o => {
+      S.gastos.push({ id: uid(), fecha: o.fecha || hoy(), concepto: 'Compra del súper (' + comprados.length + ' productos)', monto: num(o.monto), categoria: 'ingredientes' });
+      for (const l of comprados) { const i = ingrediente(l.ingId); if (i && num(l.precio)) i.precio = num(l.precio); }
+      S.lista = S.lista.filter(l => !l.check);
+      setTimeout(() => avisar('Gasto anotado y precios actualizados ✅'), 50);
+    }
+  });
+}
+function formVenta(v = {}) {
+  const opciones = [...S.recetas.map(r => [r.id, r.nombre + ' (' + plata(precioReceta(r)) + ')']), ['__otro', 'Otra cosa…']];
+  abrirForm({
+    titulo: v.id ? 'Editar venta' : 'Nueva venta / pedido',
+    campos: [
+      { nombre: 'recetaId', label: '¿Qué vendiste?', tipo: 'select', opciones },
+      { nombre: 'otro', label: 'Si es otra cosa, ¿qué?', ph: 'Ej: caja surtida' },
+      { nombre: 'cant', label: 'Cantidad', tipo: 'numero', valor: 1 },
+      { nombre: 'precioUnit', label: 'Precio de cada uno', tipo: 'numero', ph: 'Vacío = precio de la receta' },
+      { nombre: 'cliente', label: 'Cliente', ph: 'Ej: tía Laura' },
+      { nombre: 'fecha', label: 'Fecha de entrega', tipo: 'fecha', valor: hoy() },
+      { nombre: 'entregado', label: 'Ya lo entregué', tipo: 'check' },
+      { nombre: 'pagado', label: 'Ya me pagaron', tipo: 'check' }
+    ],
+    valores: v.id ? { ...v, recetaId: v.recetaId || '__otro', otro: v.recetaId ? '' : v.producto } : {},
+    guardar: o => {
+      const r = receta(o.recetaId);
+      if (!r && !o.otro) { avisar('Escribí qué vendiste'); return false; }
+      const precioUnit = o.precioUnit === '' ? (r ? precioReceta(r) : 0) : num(o.precioUnit);
+      const datos = { recetaId: r ? r.id : null, producto: r ? r.nombre : o.otro, cant: num(o.cant) || 1, precioUnit, cliente: o.cliente, fecha: o.fecha || hoy(), entregado: o.entregado, pagado: o.pagado };
+      if (v.id) Object.assign(v, datos); else S.ventas.push({ id: uid(), ...datos });
+    },
+    borrar: v.id && (() => { S.ventas = S.ventas.filter(x => x !== v); })
+  });
+}
+function formGasto(g = {}) {
+  abrirForm({
+    titulo: g.id ? 'Editar gasto' : 'Nuevo gasto',
+    campos: [
+      { nombre: 'concepto', label: '¿En qué gastaste?', ph: 'Ej: cajitas y cintas', requerido: true },
+      { nombre: 'monto', label: '¿Cuánto?', tipo: 'numero', requerido: true },
+      { nombre: 'categoria', label: 'Tipo', tipo: 'select', opciones: [['ingredientes', 'Ingredientes'], ['packaging', 'Packaging'], ['utensilios', 'Utensilios'], ['otro', 'Otro']] },
+      { nombre: 'fecha', label: 'Fecha', tipo: 'fecha', valor: hoy() }
+    ],
+    valores: g,
+    guardar: o => { if (g.id) Object.assign(g, o); else S.gastos.push({ id: uid(), ...o }); },
+    borrar: g.id && (() => { S.gastos = S.gastos.filter(x => x !== g); })
+  });
+}
+
+/* ---------- editor de recetas ---------- */
+let recetaEdit = null;
+function abrirReceta(r) {
+  recetaEdit = r ? JSON.parse(JSON.stringify(r)) : { id: null, nombre: '', rinde: 1, precio: '', pasos: '', items: [{ ingId: S.ingredientes[0]?.id || '', cant: '' }] };
+  formActual = null;
+  pintarReceta();
+  document.getElementById('modal').hidden = false;
+}
+function pintarReceta() {
+  const r = recetaEdit;
+  const m = document.getElementById('modal');
+  const filas = r.items.map((it, k) => {
+    const i = ingrediente(it.ingId);
+    return `<div class="item-receta">
+      <select data-ri="${k}" data-rc="ingId">${S.ingredientes.map(x => `<option value="${x.id}" ${x.id === it.ingId ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select>
+      <input data-ri="${k}" data-rc="cant" type="number" inputmode="decimal" step="any" min="0" value="${esc(it.cant)}" placeholder="cant.">
+      <span class="u">${i ? unidadCorta(i.unidad) : ''}</span>
+      <button type="button" data-act="r-quitar" data-k="${k}" aria-label="Quitar">✕</button></div>`;
+  }).join('');
+  m.innerHTML = `<div class="sheet"><h2>${r.id ? 'Editar receta' : 'Nueva receta'}</h2>
+    <label class="campo"><span>Nombre</span><input data-rc="nombre" value="${esc(r.nombre)}" placeholder="Ej: Budín marmolado"></label>
+    <label class="campo"><span>¿Cuántas unidades salen?</span><input data-rc="rinde" type="number" inputmode="decimal" min="1" value="${esc(r.rinde)}"></label>
+    <div class="campo"><span>Ingredientes (la cantidad que usás)</span>${filas || '<p class="vacio">Todavía no agregaste ingredientes.</p>'}
+      <button type="button" class="btn chico" data-act="r-agregar">+ Ingrediente</button></div>
+    <div class="total-receta" id="r-total"></div>
+    <label class="campo"><span>Precio de venta de cada uno</span><input data-rc="precio" type="number" inputmode="decimal" min="0" value="${esc(r.precio)}" placeholder="Vacío = uso el sugerido"></label>
+    <label class="campo"><span>Pasos (opcional)</span><textarea data-rc="pasos" placeholder="1. Batir huevos con azúcar…">${esc(r.pasos)}</textarea></label>
+    <div class="acciones">${r.id ? '<button type="button" class="btn peligro izq" data-act="r-borrar">Borrar</button>' : ''}
+      <button type="button" class="btn" data-act="m-cerrar">Cancelar</button><button type="button" class="btn primario" data-act="r-guardar">Guardar</button></div></div>`;
+  pintarTotalReceta();
+}
+function pintarTotalReceta() {
+  const el = document.getElementById('r-total');
+  if (!el) return;
+  const r = recetaEdit;
+  el.innerHTML = `Te cuesta ${plata(costoReceta(r))} hacerla · ${plata(costoUnidad(r))} cada una<br>Precio sugerido: ${plata(precioSugerido(r))} c/u`;
+}
+
+/* ---------- vistas ---------- */
+function filaTarea(t) {
+  const atrasada = !t.hecha && t.fecha && diasHasta(t.fecha) < 0;
+  return `<div class="fila"><button class="check ${t.hecha ? 'si' : ''}" data-act="tarea-ok" data-id="${t.id}" aria-label="Marcar hecha">${t.hecha ? '✓' : ''}</button>
+    <div class="cuerpo tocable" data-act="tarea-edit" data-id="${t.id}"><div class="titulo ${t.hecha ? 'tachado' : ''}">${esc(t.titulo)}</div>
+    <div class="sub"><span class="punto" style="background:${colorMat(t.materiaId)}"></span> ${esc(nombreMat(t.materiaId))}</div></div>
+    <span class="chip ${atrasada ? 'rojo' : diasHasta(t.fecha) <= 1 ? 'ambar' : ''}">${cuando(t.fecha)}</span></div>`;
+}
+function filaExamen(e) {
+  const n = diasHasta(e.fecha);
+  const chip = e.nota !== '' && e.nota != null ? `<span class="chip ${e.nota >= 7 ? 'verde' : e.nota >= 4 ? 'ambar' : 'rojo'}">Nota ${e.nota}</span>`
+    : `<span class="chip ${n < 0 ? '' : n <= 3 ? 'rosa' : 'azul'}">${n < 0 ? 'falta la nota' : n === 0 ? '¡hoy!' : 'faltan ' + n + ' d'}</span>`;
+  return `<div class="fila tocable" data-act="examen-edit" data-id="${e.id}"><span class="punto" style="background:${colorMat(e.materiaId)}"></span>
+    <div class="cuerpo"><div class="titulo">${esc(nombreMat(e.materiaId))}: ${esc(e.tema)}</div><div class="sub">${e.fecha ? fechaCorta(e.fecha) : 'sin fecha'}</div></div>${chip}</div>`;
+}
+function filaVenta(v) {
+  return `<div class="fila"><div class="cuerpo tocable" data-act="venta-edit" data-id="${v.id}">
+    <div class="titulo">${esc(v.producto)} × ${v.cant}</div><div class="sub">${esc(v.cliente || 'sin nombre')} · ${cuando(v.fecha)}</div>
+    <div class="botones" style="margin-top:6px">
+      <button class="chip ${v.entregado ? 'verde' : 'ambar'}" data-act="venta-entregado" data-id="${v.id}">${v.entregado ? '✓ Entregado' : 'Por entregar'}</button>
+      <button class="chip ${v.pagado ? 'verde' : 'rojo'}" data-act="venta-pagado" data-id="${v.id}">${v.pagado ? '✓ Pagado' : 'Falta pagar'}</button></div></div>
+    <span class="monto">${plata(totalVenta(v))}</span></div>`;
+}
+const pendientes = () => S.tareas.filter(t => !t.hecha).sort((a, b) => (a.fecha || '9').localeCompare(b.fecha || '9'));
+const proxExamenes = () => S.examenes.filter(e => e.fecha && diasHasta(e.fecha) >= 0).sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+function vistaInicio() {
+  const d = new Date();
+  const pend = pendientes();
+  const exs = proxExamenes();
+  const pedidos = S.ventas.filter(v => !v.entregado).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const r = resumenMes(hoy().slice(0, 7));
+  const dia = d.getDay();
+  const cole = dia >= 1 && dia <= 5 ? (S.horario[dia] || []) : [];
+  const proxEventos = S.eventos.filter(e => diasHasta(e.fecha) >= 0 && diasHasta(e.fecha) <= 7).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  return `
+  ${!S.nombre ? `<div class="tarjeta"><h2>¡Hola! ¿Cómo te llamás?</h2><div class="botones"><input id="in-nombre" class="precio-in" style="flex:1;text-align:left;width:auto" placeholder="Tu nombre"><button class="btn primario chico" data-act="poner-nombre">Listo</button></div></div>` : ''}
+  <div class="rapidos">
+    <button data-act="nueva-tarea"><span>📝</span>Tarea</button>
+    <button data-act="nuevo-examen"><span>📚</span>Examen</button>
+    <button data-act="nueva-venta"><span>🧁</span>Venta</button>
+    <button data-act="nuevo-gasto"><span>💸</span>Gasto</button>
+  </div>
+  ${cole.length ? `<div class="tarjeta"><h2>Hoy en el cole</h2><div class="botones">${cole.map(id => `<span class="chip" style="background:${colorMat(id)};color:#fff">${esc(nombreMat(id))}</span>`).join('')}</div></div>` : ''}
+  <div class="tarjeta"><h2>Tareas que vienen <button class="btn chico" data-act="ir" data-v="colegio" data-s="tareas">Ver todas</button></h2>
+    ${pend.length ? pend.slice(0, 4).map(filaTarea).join('') : '<p class="vacio">No tenés tareas pendientes 🎉</p>'}</div>
+  <div class="tarjeta"><h2>Próximos exámenes <button class="btn chico" data-act="ir" data-v="colegio" data-s="examenes">Ver todos</button></h2>
+    ${exs.length ? exs.slice(0, 3).map(filaExamen).join('') : '<p class="vacio">No hay exámenes anotados.</p>'}</div>
+  ${proxEventos.length ? `<div class="tarjeta"><h2>Esta semana</h2>${proxEventos.map(e => `<div class="fila"><div class="cuerpo"><div class="titulo">${(TIPOS_EVENTO.find(t => t[0] === e.tipo) || ['', '⭐'])[1].split(' ')[0]} ${esc(e.titulo)}</div></div><span class="chip violeta">${cuando(e.fecha)}</span></div>`).join('')}</div>` : ''}
+  <div class="tarjeta"><h2>Pedidos por entregar <button class="btn chico" data-act="ir" data-v="negocio" data-s="ventas">Ventas</button></h2>
+    ${pedidos.length ? pedidos.slice(0, 4).map(filaVenta).join('') : '<p class="vacio">No hay pedidos pendientes.</p>'}</div>
+  <div class="tarjeta"><h2>Tu negocio en ${MESES[d.getMonth()]} <button class="btn chico" data-act="ir" data-v="negocio" data-s="plata">Plata</button></h2>
+    <div class="cifras"><div class="cifra verde"><small>Ganaste</small><b>${plata(r.ganado)}</b></div>
+    <div class="cifra rosa"><small>Gastaste</small><b>${plata(r.gastado)}</b></div>
+    <div class="cifra"><small>Te quedó</small><b>${plata(r.ganancia)}</b></div></div>
+    ${r.porCobrar ? `<p class="sub" style="margin:10px 0 0">Te deben ${plata(r.porCobrar)}.</p>` : ''}</div>`;
+}
+
+function vistaColegio() {
+  const tabs = [['tareas', '📝 Tareas'], ['examenes', '📚 Exámenes'], ['materias', '🏫 Materias y horario']];
+  let html = `<div class="pestanas">${tabs.map(([k, l]) => `<button class="pestana ${ui.colegio === k ? 'activa' : ''}" data-act="sub-colegio" data-s="${k}">${l}</button>`).join('')}</div>`;
+  if (ui.colegio === 'tareas') {
+    const pend = pendientes();
+    const atrasadas = pend.filter(t => t.fecha && diasHasta(t.fecha) < 0);
+    const semana = pend.filter(t => !t.fecha || (diasHasta(t.fecha) >= 0 && diasHasta(t.fecha) < 7));
+    const despues = pend.filter(t => t.fecha && diasHasta(t.fecha) >= 7);
+    const hechas = S.tareas.filter(t => t.hecha).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    html += `<button class="btn primario ancho" data-act="nueva-tarea" style="margin-bottom:14px">+ Nueva tarea</button>`;
+    if (atrasadas.length) html += `<div class="tarjeta"><h2>⚠️ Atrasadas</h2>${atrasadas.map(filaTarea).join('')}</div>`;
+    html += `<div class="tarjeta"><h2>Esta semana</h2>${semana.length ? semana.map(filaTarea).join('') : '<p class="vacio">Nada para esta semana.</p>'}</div>`;
+    if (despues.length) html += `<div class="tarjeta"><h2>Más adelante</h2>${despues.map(filaTarea).join('')}</div>`;
+    if (hechas.length) html += `<div class="tarjeta"><h2>Hechas (${hechas.length}) <button class="btn chico" data-act="ver-hechas">${ui.verHechas ? 'Ocultar' : 'Mostrar'}</button></h2>${ui.verHechas ? hechas.slice(0, 30).map(filaTarea).join('') : ''}</div>`;
+  } else if (ui.colegio === 'examenes') {
+    const prox = proxExamenes();
+    const pasados = S.examenes.filter(e => !e.fecha || diasHasta(e.fecha) < 0).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    html += `<button class="btn primario ancho" data-act="nuevo-examen" style="margin-bottom:14px">+ Nuevo examen</button>
+      <div class="tarjeta"><h2>Próximos</h2>${prox.length ? prox.map(filaExamen).join('') : '<p class="vacio">No hay exámenes anotados.</p>'}</div>
+      ${pasados.length ? `<div class="tarjeta"><h2>Ya los rendí</h2>${pasados.map(filaExamen).join('')}<p class="sub" style="margin:8px 0 0">Tocá un examen para ponerle la nota.</p></div>` : ''}`;
+  } else {
+    const dHoy = new Date().getDay();
+    html += `<div class="tarjeta"><h2>Mi horario</h2><div class="horario">${[1, 2, 3, 4, 5].map(d => `<div class="dia ${d === dHoy ? 'hoy' : ''}"><b>${DIAS[d]}</b>
+      ${(S.horario[d] || []).map((id, k) => `<button class="mat" style="background:${colorMat(id)}" data-act="hor-quitar" data-d="${d}" data-k="${k}" title="Tocá para sacar">${esc(nombreMat(id))}</button>`).join('')}
+      <button class="mas" data-act="hor-agregar" data-d="${d}" aria-label="Agregar materia">+</button></div>`).join('')}</div>
+      <p class="sub" style="margin:8px 0 0">Tocá + para sumar una materia al día. Tocá una materia para sacarla.</p></div>
+      <div class="tarjeta"><h2>Materias <button class="btn chico" data-act="nueva-materia">+ Materia</button></h2>
+      ${S.materias.map(m => {
+        const notas = S.examenes.filter(e => e.materiaId === m.id && e.nota !== '' && e.nota != null).map(e => num(e.nota));
+        const prom = notas.length ? (notas.reduce((a, b) => a + b, 0) / notas.length) : null;
+        const pend = S.tareas.filter(t => t.materiaId === m.id && !t.hecha).length;
+        return `<div class="fila tocable" data-act="materia-edit" data-id="${m.id}"><span class="punto" style="background:${m.color}"></span>
+          <div class="cuerpo"><div class="titulo">${esc(m.nombre)}</div><div class="sub">${m.profe ? esc(m.profe) + ' · ' : ''}${pend} tarea${pend === 1 ? '' : 's'} pendiente${pend === 1 ? '' : 's'}</div></div>
+          ${prom != null ? `<span class="chip ${prom >= 7 ? 'verde' : prom >= 4 ? 'ambar' : 'rojo'}">Promedio ${prom.toFixed(1).replace('.', ',')}</span>` : ''}</div>`;
+      }).join('') || '<p class="vacio">Agregá tus materias.</p>'}</div>`;
+  }
+  return html;
+}
+
+function itemsDelDia(f) {
+  const it = [];
+  S.tareas.filter(t => t.fecha === f).forEach(t => it.push({ color: 'var(--azul)', texto: '📝 ' + t.titulo + ' (' + nombreMat(t.materiaId) + ')', act: 'tarea-edit', id: t.id, hecho: t.hecha }));
+  S.examenes.filter(e => e.fecha === f).forEach(e => it.push({ color: 'var(--rosa)', texto: '📚 Examen de ' + nombreMat(e.materiaId) + ': ' + e.tema, act: 'examen-edit', id: e.id }));
+  S.ventas.filter(v => v.fecha === f).forEach(v => it.push({ color: 'var(--ambar)', texto: '🧁 Entregar ' + v.producto + ' × ' + v.cant + (v.cliente ? ' a ' + v.cliente : ''), act: 'venta-edit', id: v.id, hecho: v.entregado }));
+  S.eventos.filter(e => e.fecha === f).forEach(e => it.push({ color: 'var(--violeta)', texto: (TIPOS_EVENTO.find(t => t[0] === e.tipo) || ['', '⭐'])[1].split(' ')[0] + ' ' + e.titulo, act: 'evento-edit', id: e.id }));
+  return it;
+}
+function vistaCalendario() {
+  const [y, m] = ui.calMes.split('-').map(Number);
+  const primero = new Date(y, m - 1, 1);
+  const inicio = new Date(y, m - 1, 1 - ((primero.getDay() + 6) % 7));
+  const celdas = [];
+  for (let k = 0; k < 42; k++) {
+    const d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + k);
+    if (k >= 35 && d.getMonth() !== m - 1) break;
+    const f = iso(d);
+    const colores = [...new Set(itemsDelDia(f).map(i => i.color))].slice(0, 4);
+    celdas.push(`<button class="${d.getMonth() !== m - 1 ? 'fuera' : ''} ${f === hoy() ? 'hoy' : ''} ${f === ui.calDia ? 'sel' : ''}" data-act="cal-dia" data-f="${f}">${d.getDate()}<span class="puntos">${colores.map(c => `<i style="background:${c}"></i>`).join('')}</span></button>`);
+  }
+  const items = itemsDelDia(ui.calDia);
+  const dSel = aFecha(ui.calDia);
+  return `<div class="tarjeta"><div class="cal-cab"><button class="icono" data-act="cal-mes" data-n="-1" aria-label="Mes anterior">‹</button>
+    <b>${MESES[m - 1]} ${y}</b><button class="icono" data-act="cal-mes" data-n="1" aria-label="Mes siguiente">›</button></div>
+    <div class="cal">${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => `<div class="dsem">${x}</div>`).join('')}${celdas.join('')}</div>
+    <div class="leyenda"><span><i class="punto" style="background:var(--azul)"></i>Tareas</span><span><i class="punto" style="background:var(--rosa)"></i>Exámenes</span><span><i class="punto" style="background:var(--ambar)"></i>Pedidos</span><span><i class="punto" style="background:var(--violeta)"></i>Eventos</span></div></div>
+    <div class="tarjeta"><h2>${DIAS_LARGOS[dSel.getDay()].replace(/^./, c => c.toUpperCase())} ${dSel.getDate()} de ${MESES[dSel.getMonth()]} <button class="btn chico primario" data-act="nuevo-evento">+ Evento</button></h2>
+    ${items.length ? items.map(i => `<div class="fila tocable" data-act="${i.act}" data-id="${i.id}"><span class="punto" style="background:${i.color}"></span><div class="cuerpo"><div class="titulo ${i.hecho ? 'tachado' : ''}">${esc(i.texto)}</div></div></div>`).join('') : '<p class="vacio">Nada anotado este día.</p>'}</div>`;
+}
+
+function vistaNegocio() {
+  const tabs = [['super', '🏪 Súper'], ['lista', '🛒 Lista'], ['recetas', '📖 Recetas'], ['ventas', '🧁 Ventas'], ['plata', '💰 Plata']];
+  let html = `<div class="pestanas">${tabs.map(([k, l]) => `<button class="pestana ${ui.negocio === k ? 'activa' : ''}" data-act="sub-negocio" data-s="${k}">${l}${k === 'lista' && S.lista.length ? ' (' + S.lista.length + ')' : ''}</button>`).join('')}</div>`;
+  const t = ui.negocio;
+  if (t === 'super') {
+    html += `${S.ejemplos ? `<div class="aviso">Los precios son de ejemplo. Tocá cada producto y poné lo que sale donde comprás. <button class="btn chico" data-act="ocultar-ejemplo" style="margin-top:6px">Entendido</button></div>` : ''}
+      <button class="btn primario ancho" data-act="nuevo-ingrediente" style="margin-bottom:14px">+ Producto</button>
+      <div class="tarjeta"><h2>Mis productos</h2>${S.ingredientes.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(i => {
+        const porCien = i.unidad === 'u' ? plata(i.precio / (i.cantidad || 1)) + ' c/u' : plata(i.precio / (i.cantidad || 1) * 100) + ' c/100 ' + i.unidad;
+        return `<div class="fila"><div class="cuerpo tocable" data-act="ingrediente-edit" data-id="${i.id}"><div class="titulo">${esc(i.nombre)}</div><div class="sub">Paquete de ${i.cantidad} ${unidadCorta(i.unidad)} · ${porCien}</div></div>
+          <span class="monto">${plata(i.precio)}</span><button class="btn chico" data-act="a-lista" data-id="${i.id}" aria-label="Agregar a la lista">🛒+</button></div>`;
+      }).join('') || '<p class="vacio">Agregá lo que comprás para cocinar.</p>'}</div>`;
+  } else if (t === 'lista') {
+    const total = S.lista.reduce((s, l) => s + l.paquetes * num(l.precio), 0);
+    const tildado = S.lista.filter(l => l.check).reduce((s, l) => s + l.paquetes * num(l.precio), 0);
+    html += `<div class="botones" style="margin-bottom:14px"><button class="btn primario" data-act="item-lista">+ Agregar</button><button class="btn" data-act="lista-receta">📖 Desde una receta</button></div>
+      <div class="tarjeta"><h2>Lista de compras <span class="monto">${plata(total)}</span></h2>
+      ${S.lista.length ? S.lista.map(l => `<div class="fila"><button class="check ${l.check ? 'si' : ''}" data-act="lista-check" data-id="${l.id}" aria-label="Lo tengo">${l.check ? '✓' : ''}</button>
+        <div class="cuerpo"><div class="titulo ${l.check ? 'tachado' : ''}">${esc(l.nombre)}</div><div class="sub">${plata(l.paquetes * num(l.precio))}</div></div>
+        <div class="stepper"><button data-act="lista-menos" data-id="${l.id}" aria-label="Menos">−</button><span>${l.paquetes}</span><button data-act="lista-mas" data-id="${l.id}" aria-label="Más">+</button></div>
+        <input class="precio-in" type="number" inputmode="decimal" min="0" value="${num(l.precio)}" data-cambio="lista-precio" data-id="${l.id}" aria-label="Precio de cada uno"></div>`).join('')
+        : '<p class="vacio">La lista está vacía. Agregá productos o armala desde una receta.</p>'}
+      ${S.lista.length ? `<p class="sub" style="margin:8px 0 0">Tildá lo que vas metiendo en el carrito. Si un precio cambió, corregilo en el casillero.</p>` : ''}</div>
+      ${S.lista.length ? `<button class="btn primario ancho" data-act="terminar-compra">✅ Terminé de comprar ${tildado ? '· ' + plata(tildado) : ''}</button>` : ''}`;
+  } else if (t === 'recetas') {
+    html += `<button class="btn primario ancho" data-act="nueva-receta" style="margin-bottom:14px">+ Nueva receta</button>
+      ${S.recetas.map(r => {
+        const precio = precioReceta(r), cu = costoUnidad(r);
+        return `<div class="tarjeta"><h2>${esc(r.nombre)} <span class="sub mini">rinde ${r.rinde}</span></h2>
+          <div class="receta-costos"><div>Hacerla te cuesta<b>${plata(costoReceta(r))}</b></div><div>Cada una te cuesta<b>${plata(cu)}</b></div>
+          <div>La vendés a<b>${plata(precio)}${num(r.precio) ? '' : ' <span class="sub">(sugerido)</span>'}</b></div><div>Ganás por cada una<b style="color:${precio - cu >= 0 ? 'var(--verde)' : 'var(--rojo)'}">${plata(precio - cu)}</b></div></div>
+          ${r.pasos ? `<div class="pasos">${esc(r.pasos)}</div>` : ''}
+          <div class="botones" style="margin-top:10px"><button class="btn chico" data-act="receta-edit" data-id="${r.id}">Editar</button><button class="btn chico" data-act="lista-receta" data-id="${r.id}">🛒 Comprar para hacerla</button></div></div>`;
+      }).join('') || '<div class="tarjeta"><p class="vacio">Todavía no tenés recetas.</p></div>'}
+      <p class="sub">El precio sugerido es ${String(S.margen).replace('.', ',')} veces lo que te cuesta, para cubrir gas, luz, packaging y tu trabajo. Lo podés cambiar en ⚙️.</p>`;
+  } else if (t === 'ventas') {
+    const porEntregar = S.ventas.filter(v => !v.entregado).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const resto = S.ventas.filter(v => v.entregado).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    html += `<button class="btn primario ancho" data-act="nueva-venta" style="margin-bottom:14px">+ Nueva venta o pedido</button>
+      <div class="tarjeta"><h2>Por entregar</h2>${porEntregar.length ? porEntregar.map(filaVenta).join('') : '<p class="vacio">No hay pedidos pendientes.</p>'}</div>
+      <div class="tarjeta"><h2>Entregadas</h2>${resto.length ? resto.slice(0, 40).map(filaVenta).join('') : '<p class="vacio">Acá van a aparecer tus ventas.</p>'}</div>`;
+  } else {
+    const r = resumenMes(ui.finMes);
+    const [y, m] = ui.finMes.split('-').map(Number);
+    const meses = [];
+    for (let k = 5; k >= 0; k--) { const d = new Date(y, m - 1 - k, 1); meses.push(iso(d).slice(0, 7)); }
+    const datos = meses.map(mm => ({ mm, ...resumenMes(mm) }));
+    const max = Math.max(1, ...datos.map(d => Math.max(d.ganado, d.gastado)));
+    const top = {};
+    r.ventas.forEach(v => { top[v.producto] = (top[v.producto] || 0) + num(v.cant); });
+    const ranking = Object.entries(top).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const movs = [
+      ...r.ventas.filter(v => v.pagado).map(v => ({ fecha: v.fecha, texto: '🧁 ' + v.producto + ' × ' + v.cant + (v.cliente ? ' · ' + v.cliente : ''), monto: totalVenta(v), act: 'venta-edit', id: v.id })),
+      ...S.gastos.filter(g => mesDe(g.fecha) === ui.finMes).map(g => ({ fecha: g.fecha, texto: '💸 ' + g.concepto, monto: -num(g.monto), act: 'gasto-edit', id: g.id }))
+    ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    html += `<div class="tarjeta"><div class="cal-cab"><button class="icono" data-act="fin-mes" data-n="-1" aria-label="Mes anterior">‹</button>
+      <b>${MESES[m - 1]} ${y}</b><button class="icono" data-act="fin-mes" data-n="1" aria-label="Mes siguiente">›</button></div>
+      <div class="cifras"><div class="cifra verde"><small>Ganaste</small><b>${plata(r.ganado)}</b></div><div class="cifra rosa"><small>Gastaste</small><b>${plata(r.gastado)}</b></div><div class="cifra"><small>Te quedó</small><b>${plata(r.ganancia)}</b></div></div>
+      ${r.porCobrar ? `<div class="aviso" style="margin:10px 0 0">Te deben ${plata(r.porCobrar)} de ventas sin cobrar.</div>` : ''}</div>
+      <div class="tarjeta"><h2>Últimos 6 meses</h2><div class="barras">${datos.map(d => `<div class="mes"><div class="par">
+        <i style="height:${d.ganado / max * 100}%;background:var(--verde)" title="Ganaste ${plata(d.ganado)}"></i><i style="height:${d.gastado / max * 100}%;background:var(--rosa)" title="Gastaste ${plata(d.gastado)}"></i></div>
+        <small>${MESES[Number(d.mm.slice(5)) - 1].slice(0, 3)}</small></div>`).join('')}</div>
+        <div class="leyenda"><span><i class="punto" style="background:var(--verde)"></i>Ganaste</span><span><i class="punto" style="background:var(--rosa)"></i>Gastaste</span></div></div>
+      ${ranking.length ? `<div class="tarjeta"><h2>Lo más vendido</h2>${ranking.map(([p, c], k) => `<div class="fila"><b>${['🥇', '🥈', '🥉'][k]}</b><div class="cuerpo"><div class="titulo">${esc(p)}</div></div><span class="chip">${c} vendidos</span></div>`).join('')}</div>` : ''}
+      <div class="tarjeta"><h2>Movimientos <button class="btn chico" data-act="nuevo-gasto">+ Gasto</button></h2>
+      ${movs.length ? movs.map(x => `<div class="fila tocable" data-act="${x.act}" data-id="${x.id}"><div class="cuerpo"><div class="titulo">${esc(x.texto)}</div><div class="sub">${fechaCorta(x.fecha)}</div></div><span class="monto" style="color:${x.monto >= 0 ? 'var(--verde)' : 'var(--rosa)'}">${x.monto >= 0 ? '+' : ''}${plata(x.monto)}</span></div>`).join('') : '<p class="vacio">Sin movimientos este mes.</p>'}
+      <p class="sub" style="margin:8px 0 0">Las ventas cobradas y las compras del súper se anotan solas.</p></div>`;
+  }
+  return html;
+}
+
+function vistaAjustes() {
+  return `<div class="tarjeta"><h2>Ajustes</h2>
+    <label class="campo"><span>Tu nombre</span><input id="aj-nombre" value="${esc(S.nombre)}"></label>
+    <label class="campo"><span>Precio sugerido = costo ×</span><input id="aj-margen" type="number" inputmode="decimal" step="0.1" min="1" value="${S.margen}"></label>
+    <p class="ayuda">Con 2,5 un muffin que te cuesta $400 se sugiere a $1.000.</p>
+    <button class="btn primario" data-act="aj-guardar">Guardar</button></div>
+    <div class="tarjeta"><h2>Copia de seguridad</h2><p class="sub">Todo se guarda en este celu o compu. Bajate una copia de vez en cuando por si se borra.</p>
+    <div class="botones"><button class="btn" data-act="exportar">⬇️ Bajar copia</button><label class="btn" style="display:inline-block">⬆️ Cargar copia<input type="file" accept="application/json" id="importar" hidden></label></div></div>
+    <div class="tarjeta"><h2>Empezar de cero</h2><p class="sub">Borra todo lo que anotaste.</p><button class="btn peligro" data-act="borrar-todo">Borrar todo</button></div>`;
+}
+
+function render() {
+  const d = new Date();
+  const vistas = { inicio: vistaInicio, colegio: vistaColegio, calendario: vistaCalendario, negocio: vistaNegocio, ajustes: vistaAjustes };
+  const titulos = { inicio: S.nombre ? 'Hola, ' + esc(S.nombre) + ' 👋' : 'Mi agenda', colegio: 'Colegio', calendario: 'Calendario', negocio: 'Mi emprendimiento', ajustes: 'Ajustes' };
+  document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.vista]}</h1></div>
+    <button class="icono" data-act="ir" data-v="${ui.vista === 'ajustes' ? 'inicio' : 'ajustes'}" aria-label="Ajustes">${ui.vista === 'ajustes' ? '✕' : '⚙️'}</button></header>${vistas[ui.vista]()}`;
+  const nav = [['inicio', '🏠', 'Inicio'], ['colegio', '🎒', 'Colegio'], ['calendario', '📅', 'Calendario'], ['negocio', '🧁', 'Negocio']];
+  document.getElementById('nav').innerHTML = nav.map(([k, i, l]) => `<button class="${ui.vista === k ? 'activa' : ''}" data-act="ir" data-v="${k}"><span>${i}</span>${l}</button>`).join('');
+}
+const listo = () => { guardarTodo(); render(); };
+
+/* ---------- eventos ---------- */
+const buscar = (lista, id) => S[lista].find(x => x.id === id);
+const acciones = {
+  'ir': el => { ui.vista = el.dataset.v; if (el.dataset.s) ui[el.dataset.v] = el.dataset.s; window.scrollTo(0, 0); render(); },
+  'sub-colegio': el => { ui.colegio = el.dataset.s; render(); },
+  'sub-negocio': el => { ui.negocio = el.dataset.s; render(); },
+  'poner-nombre': () => { const v = document.getElementById('in-nombre').value.trim(); if (v) { S.nombre = v; listo(); } },
+  'nueva-tarea': () => formTarea(),
+  'tarea-edit': el => formTarea(buscar('tareas', el.dataset.id)),
+  'tarea-ok': el => { const t = buscar('tareas', el.dataset.id); t.hecha = !t.hecha; if (t.hecha) avisar('¡Bien ahí! ✨'); listo(); },
+  'ver-hechas': () => { ui.verHechas = !ui.verHechas; render(); },
+  'nuevo-examen': () => formExamen(),
+  'examen-edit': el => formExamen(buscar('examenes', el.dataset.id)),
+  'nueva-materia': () => formMateria(),
+  'materia-edit': el => formMateria(buscar('materias', el.dataset.id)),
+  'hor-agregar': el => {
+    const d = el.dataset.d;
+    abrirForm({ titulo: 'Agregar al ' + DIAS_LARGOS[d], campos: [{ nombre: 'm', label: 'Materia', tipo: 'select', opciones: S.materias.map(m => [m.id, m.nombre]) }],
+      guardar: o => { if (o.m) (S.horario[d] = S.horario[d] || []).push(o.m); } });
+  },
+  'hor-quitar': el => { const { d, k } = el.dataset; if (confirm('¿Sacar ' + nombreMat(S.horario[d][k]) + ' del ' + DIAS_LARGOS[d] + '?')) { S.horario[d].splice(k, 1); listo(); } },
+  'cal-mes': el => { const [y, m] = ui.calMes.split('-').map(Number); ui.calMes = iso(new Date(y, m - 1 + Number(el.dataset.n), 1)).slice(0, 7); render(); },
+  'cal-dia': el => { ui.calDia = el.dataset.f; ui.calMes = el.dataset.f.slice(0, 7); render(); },
+  'nuevo-evento': () => formEvento(),
+  'evento-edit': el => formEvento(buscar('eventos', el.dataset.id)),
+  'ocultar-ejemplo': () => { S.ejemplos = false; listo(); },
+  'nuevo-ingrediente': () => formIngrediente(),
+  'ingrediente-edit': el => formIngrediente(buscar('ingredientes', el.dataset.id)),
+  'a-lista': el => { sumarALista(el.dataset.id, 1); avisar('Agregado a la lista 🛒'); listo(); },
+  'item-lista': () => formItemLista(),
+  'lista-receta': el => formListaDesdeReceta(el.dataset.id),
+  'lista-check': el => { const l = buscar('lista', el.dataset.id); l.check = !l.check; listo(); },
+  'lista-mas': el => { buscar('lista', el.dataset.id).paquetes++; listo(); },
+  'lista-menos': el => { const l = buscar('lista', el.dataset.id); l.paquetes--; if (l.paquetes <= 0) S.lista = S.lista.filter(x => x !== l); listo(); },
+  'terminar-compra': () => formTerminarCompra(),
+  'nueva-receta': () => abrirReceta(),
+  'receta-edit': el => abrirReceta(buscar('recetas', el.dataset.id)),
+  'r-agregar': () => { recetaEdit.items.push({ ingId: S.ingredientes[0]?.id || '', cant: '' }); pintarReceta(); },
+  'r-quitar': el => { recetaEdit.items.splice(Number(el.dataset.k), 1); pintarReceta(); },
+  'r-guardar': () => {
+    const r = recetaEdit;
+    if (!r.nombre.trim()) { avisar('Ponele un nombre a la receta'); return; }
+    r.items = r.items.filter(it => it.ingId && num(it.cant) > 0).map(it => ({ ingId: it.ingId, cant: num(it.cant) }));
+    r.rinde = num(r.rinde) || 1;
+    r.precio = num(r.precio);
+    if (r.id) Object.assign(receta(r.id), r); else S.recetas.push({ ...r, id: uid() });
+    cerrarModal(); listo();
+  },
+  'r-borrar': () => { if (confirm('¿Borrar esta receta?')) { S.recetas = S.recetas.filter(x => x.id !== recetaEdit.id); cerrarModal(); listo(); } },
+  'nueva-venta': () => formVenta(),
+  'venta-edit': el => formVenta(buscar('ventas', el.dataset.id)),
+  'venta-entregado': el => { const v = buscar('ventas', el.dataset.id); v.entregado = !v.entregado; listo(); },
+  'venta-pagado': el => { const v = buscar('ventas', el.dataset.id); v.pagado = !v.pagado; if (v.pagado) avisar('💰 +' + plata(totalVenta(v))); listo(); },
+  'nuevo-gasto': () => formGasto(),
+  'gasto-edit': el => formGasto(buscar('gastos', el.dataset.id)),
+  'fin-mes': el => { const [y, m] = ui.finMes.split('-').map(Number); ui.finMes = iso(new Date(y, m - 1 + Number(el.dataset.n), 1)).slice(0, 7); render(); },
+  'aj-guardar': () => { S.nombre = document.getElementById('aj-nombre').value.trim(); S.margen = num(document.getElementById('aj-margen').value) || 2.5; avisar('Guardado'); listo(); },
+  'exportar': () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
+    a.download = 'mi-agenda-' + hoy() + '.json';
+    a.click();
+  },
+  'borrar-todo': () => { if (confirm('¿Seguro? Se borra todo lo que anotaste.') && confirm('¿Segurísima?')) { S = semilla(); ui.vista = 'inicio'; listo(); } },
+  'm-cerrar': () => cerrarModal(),
+  'm-borrar': () => { if (confirm('¿Borrar?')) { formActual.borrar(); cerrarModal(); listo(); } }
+};
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'modal') { cerrarModal(); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  e.stopPropagation();
+  acciones[el.dataset.act]?.(el);
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'f' || !formActual) return;
+  e.preventDefault();
+  if (formActual.guardar(leerForm(e.target)) === false) return;
+  cerrarModal(); listo();
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!recetaEdit || !el.dataset.rc) return;
+  if (el.dataset.ri != null) recetaEdit.items[Number(el.dataset.ri)][el.dataset.rc] = el.value;
+  else recetaEdit[el.dataset.rc] = el.value;
+  if (el.dataset.rc === 'ingId') pintarReceta(); else pintarTotalReceta();
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.cambio === 'lista-precio') { buscar('lista', el.dataset.id).precio = num(el.value); listo(); }
+  if (el.id === 'importar' && el.files[0]) {
+    el.files[0].text().then(t => {
+      try { const d = JSON.parse(t); if (!d.materias || !d.recetas) throw 0; S = Object.assign(semilla(), d); listo(); avisar('Copia cargada ✅'); }
+      catch (err) { avisar('Ese archivo no es una copia de la agenda'); }
+    });
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'in-nombre') acciones['poner-nombre']();
+  if (e.key === 'Escape' && !document.getElementById('modal').hidden) cerrarModal();
+});
+render();
+</script>
+</body>
+</html>
