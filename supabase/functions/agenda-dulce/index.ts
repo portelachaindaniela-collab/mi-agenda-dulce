@@ -83,6 +83,17 @@ const HERRAMIENTAS = [
 
 const texto = (v: unknown, max: number) => typeof v === "string" ? v.slice(0, max) : "";
 
+// Groq retira modelos de visión seguido: si el configurado ya no existe, elijo uno de los que lista hoy.
+let visionActual = MODELO_VISION;
+async function buscarModeloVision() {
+  try {
+    const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` }, signal: AbortSignal.timeout(10000) });
+    const ids: string[] = ((await r.json())?.data ?? []).filter((m: any) => m.active !== false).map((m: any) => m.id);
+    console.log("agenda-dulce modelos groq:", ids.join(", "));
+    return ids.find(id => /llama-4.*(maverick|scout)/i.test(id)) ?? ids.find(id => /vision|[-_]vl\b|vl[-_]/i.test(id)) ?? ids.find(id => /qwen/i.test(id)) ?? null;
+  } catch { return null; }
+}
+
 async function preguntarDino(familia: { id: string; nombre: string | null }, body: any) {
   const dia = hoyAR();
   const { data: uso } = await db.from("dulce_uso").select("cantidad").eq("familia_id", familia.id).eq("dia", dia).maybeSingle();
@@ -103,14 +114,19 @@ async function preguntarDino(familia: { id: string; nombre: string | null }, bod
     ...historial,
     { role: "user", content: imagen ? [{ type: "text", text: pregunta }, { type: "image_url", image_url: { url: imagen } }] : pregunta },
   ];
-  const r = await fetch(GROQ_URL, {
+  const pedir = (model: string) => fetch(GROQ_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify(imagen
-      ? { model: MODELO_VISION, messages, temperature: 0.5, max_tokens: 900 }
-      : { model: MODELO, messages, temperature: 0.5, max_tokens: 1500, tools: HERRAMIENTAS, tool_choice: "auto" }),
+      ? { model, messages, temperature: 0.5, max_tokens: 900 }
+      : { model, messages, temperature: 0.5, max_tokens: 1500, tools: HERRAMIENTAS, tool_choice: "auto" }),
     signal: AbortSignal.timeout(45000),
   });
+  let r = await pedir(imagen ? visionActual : MODELO);
+  if (imagen && (r.status === 404 || r.status === 400)) {
+    const otro = await buscarModeloVision();
+    if (otro && otro !== visionActual) { console.warn(`agenda-dulce: ${visionActual} no anda, paso a ${otro}`); visionActual = otro; r = await pedir(otro); }
+  }
   const data = await r.json().catch(() => null);
   if (!r.ok) {
     console.error("agenda-dulce IA", r.status, JSON.stringify(data).slice(0, 400));
