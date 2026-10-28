@@ -188,7 +188,7 @@ a.btn.primario{color:var(--en-boton)}
 .ayuda{font-size:13px;color:var(--muted);margin:-5px 0 11px}
 .acciones{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
 .acciones .izq{margin-right:auto}
-.item-receta{display:grid;grid-template-columns:1fr 74px 30px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.item-receta{display:grid;grid-template-columns:1fr 64px 48px 30px;gap:6px;align-items:center;margin-bottom:6px}
 .item-receta select,.item-receta input{padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);width:100%;min-width:0}
 .item-receta .u{font-size:13px;color:var(--muted);font-weight:700}
 .item-receta button{border:0;background:var(--rojo-soft);color:var(--rojo);border-radius:9px;height:30px;cursor:pointer}
@@ -672,8 +672,18 @@ function formGasto(g = {}) {
 }
 
 let recetaEdit = null;
+const ingPorNombre = n => { const k = sinTildes(n || ''); return k ? S.ingredientes.find(i => sinTildes(i.nombre) === k) : null; };
+const itemNuevo = () => ({ nombre: '', cant: '', unidad: 'g' });
+const resolverItems = r => r.items.map(it => ({ ingId: it.ingId || ingPorNombre(it.nombre)?.id, cant: it.cant }));
+const sinPrecio = items => items.filter(it => (it.nombre || '').trim()).filter(it => !num(ingPorNombre(it.nombre)?.precio)).map(it => it.nombre.trim());
+function celdaUnidad(it, k) {
+  const i = ingPorNombre(it.nombre);
+  if (i) return { tipo: 'fijo-' + i.unidad, html: unidadCorta(i.unidad) };
+  return { tipo: 'elegir', html: `<select data-ri="${k}" data-rc="unidad" aria-label="Unidad" style="padding:8px 2px">${UNIDADES.map(([u]) => `<option value="${u}" ${u === (it.unidad || 'g') ? 'selected' : ''}>${u}</option>`).join('')}</select>` };
+}
 function abrirReceta(r) {
-  recetaEdit = r ? JSON.parse(JSON.stringify(r)) : { id: null, nombre: '', rinde: 1, precio: '', pasos: '', items: [{ ingId: S.ingredientes[0]?.id || '', cant: '' }] };
+  recetaEdit = r ? { ...JSON.parse(JSON.stringify(r)), items: r.items.map(it => { const i = ingrediente(it.ingId); return { nombre: i?.nombre || '', cant: it.cant, unidad: i?.unidad || 'g' }; }) }
+    : { id: null, nombre: '', rinde: 1, precio: '', pasos: '', items: [itemNuevo()] };
   formActual = null;
   pintarReceta();
   document.getElementById('modal').hidden = false;
@@ -681,17 +691,18 @@ function abrirReceta(r) {
 function pintarReceta() {
   const r = recetaEdit;
   const filas = r.items.map((it, k) => {
-    const i = ingrediente(it.ingId);
+    const u = celdaUnidad(it, k);
     return `<div class="item-receta">
-      <select data-ri="${k}" data-rc="ingId">${S.ingredientes.map(x => `<option value="${x.id}" ${x.id === it.ingId ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select>
+      <input data-ri="${k}" data-rc="nombre" list="lista-ing" autocomplete="off" value="${esc(it.nombre)}" placeholder="Ej: harina">
       <input data-ri="${k}" data-rc="cant" type="number" inputmode="decimal" step="any" min="0" value="${esc(it.cant)}" placeholder="cant.">
-      <span class="u">${i ? unidadCorta(i.unidad) : ''}</span>
+      <span class="u" id="u-${k}" data-tipo="${u.tipo}">${u.html}</span>
       <button type="button" data-act="r-quitar" data-k="${k}" aria-label="Quitar">✕</button></div>`;
   }).join('');
   document.getElementById('modal').innerHTML = `<div class="sheet"><h2>${r.id ? 'Editar receta' : 'Nueva receta'}</h2>
     <label class="campo"><span>Nombre</span><input data-rc="nombre" value="${esc(r.nombre)}" placeholder="Ej: Budín marmolado"></label>
     <label class="campo"><span>¿Cuántas unidades salen?</span><input data-rc="rinde" type="number" inputmode="decimal" min="1" value="${esc(r.rinde)}"></label>
-    <div class="campo"><span>Ingredientes (la cantidad que usás)</span>${filas || '<p class="vacio">Todavía no agregaste ingredientes.</p>'}
+    <div class="campo"><span>Ingredientes (escribí cuál y cuánto usás)</span>${filas || '<p class="vacio">Todavía no agregaste ingredientes.</p>'}
+      <datalist id="lista-ing">${S.ingredientes.map(x => `<option value="${esc(x.nombre)}">`).join('')}</datalist>
       <button type="button" class="btn chico" data-act="r-agregar">+ Ingrediente</button></div>
     <div class="total-receta" id="r-total"></div>
     <label class="campo"><span>Precio de venta de cada uno</span><input data-rc="precio" type="number" inputmode="decimal" min="0" value="${esc(r.precio)}" placeholder="Vacío = uso el sugerido"></label>
@@ -703,7 +714,10 @@ function pintarReceta() {
 function pintarTotalReceta() {
   const el = document.getElementById('r-total');
   if (!el) return;
-  el.innerHTML = `Te cuesta ${plata(costoReceta(recetaEdit))} hacerla · ${plata(costoUnidad(recetaEdit))} cada una<br>Precio sugerido: ${plata(precioSugerido(recetaEdit))} c/u`;
+  const r = { ...recetaEdit, items: resolverItems(recetaEdit) };
+  const faltan = sinPrecio(recetaEdit.items);
+  el.innerHTML = `Te cuesta ${plata(costoReceta(r))} hacerla · ${plata(costoUnidad(r))} cada una<br>Precio sugerido: ${plata(precioSugerido(r))} c/u`
+    + (faltan.length ? `<div style="color:var(--ambar);font-size:13px;margin-top:4px">⚠️ Todavía sin precio: ${esc(faltan.join(', '))}. Al guardar los sumo al 🏪 Súper; cargales el precio ahí y la cuenta se hace sola.</div>` : '');
 }
 
 /* ---------- Dino ---------- */
@@ -1082,8 +1096,9 @@ function vistaNegocio() {
       <div class="barra-acciones"><button class="btn primario" data-act="nuevo-ingrediente">+ Producto</button><button class="btn" data-act="sub-negocio" data-s="lista">🛒 Ver lista</button></div>
       <div class="tarjeta">${S.ingredientes.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(i => {
         const porCien = i.unidad === 'u' ? plata(i.precio / (i.cantidad || 1)) + ' c/u' : plata(i.precio / (i.cantidad || 1) * 100) + ' c/100 ' + i.unidad;
-        return `<div class="fila"><div class="cuerpo tocable" data-act="ingrediente-edit" data-id="${i.id}"><div class="titulo">${esc(i.nombre)}</div><div class="sub">Paquete de ${i.cantidad} ${unidadCorta(i.unidad)} · ${porCien}</div></div>
-          <span class="monto">${plata(i.precio)}</span><button class="btn chico" data-act="a-lista" data-id="${i.id}" aria-label="Agregar a la lista">🛒+</button></div>`;
+        const falta = !num(i.precio);
+        return `<div class="fila"><div class="cuerpo tocable" data-act="ingrediente-edit" data-id="${i.id}"><div class="titulo">${esc(i.nombre)}</div><div class="sub">${falta ? '⚠️ Tocá para poner cuánto sale el paquete' : `Paquete de ${i.cantidad} ${unidadCorta(i.unidad)} · ${porCien}`}</div></div>
+          ${falta ? '<span class="chip ambar">sin precio</span>' : `<span class="monto">${plata(i.precio)}</span>`}<button class="btn chico" data-act="a-lista" data-id="${i.id}" aria-label="Agregar a la lista">🛒+</button></div>`;
       }).join('') || '<p class="vacio">Agregá lo que comprás para cocinar.</p>'}</div>`;
   } else if (t === 'lista') {
     const total = S.lista.reduce((s, l) => s + l.paquetes * num(l.precio), 0);
@@ -1104,6 +1119,7 @@ function vistaNegocio() {
         return `<div class="tarjeta"><h2>${esc(r.nombre)} <span class="sub mini">rinde ${r.rinde}</span></h2>
           <div class="receta-costos"><div>Hacerla te cuesta<b>${plata(costoReceta(r))}</b></div><div>Cada una te cuesta<b>${plata(cu)}</b></div>
           <div>La vendés a<b>${plata(precio)}${num(r.precio) ? '' : ' <span class="sub">(sugerido)</span>'}</b></div><div>Ganás por cada una<b style="color:${precio - cu >= 0 ? 'var(--verde)' : 'var(--rojo)'}">${plata(precio - cu)}</b></div></div>
+          ${(() => { const f = r.items.map(it => ingrediente(it.ingId)).filter(i => i && !num(i.precio)).map(i => i.nombre); return f.length ? `<p class="sub" style="color:var(--ambar);margin:6px 0 0">⚠️ Faltan precios de ${esc(f.join(', '))}: cargalos en 🏪 Súper para que la cuenta dé bien.</p>` : ''; })()}
           ${r.pasos ? `<div class="pasos">${esc(r.pasos)}</div>` : ''}
           <div class="botones" style="margin-top:8px"><button class="btn chico" data-act="receta-edit" data-id="${r.id}">Editar</button><button class="btn chico" data-act="lista-receta" data-id="${r.id}">🛒 Comprar para hacerla</button></div></div>`;
       }).join('') || '<div class="tarjeta"><p class="vacio">Todavía no tenés recetas.</p></div>'}</div>
@@ -1421,12 +1437,27 @@ const acciones = {
   'terminar-compra': () => formTerminarCompra(),
   'nueva-receta': () => abrirReceta(),
   'receta-edit': el => abrirReceta(buscar('recetas', el.dataset.id)),
-  'r-agregar': () => { recetaEdit.items.push({ ingId: S.ingredientes[0]?.id || '', cant: '' }); pintarReceta(); },
+  'r-agregar': () => { recetaEdit.items.push(itemNuevo()); pintarReceta(); const ins = document.querySelectorAll('[data-rc="nombre"][data-ri]'); ins[ins.length - 1]?.focus(); },
   'r-quitar': el => { recetaEdit.items.splice(Number(el.dataset.k), 1); pintarReceta(); },
   'r-guardar': () => {
     const r = recetaEdit;
     if (!r.nombre.trim()) { avisar('Ponele un nombre a la receta'); return; }
-    r.items = r.items.filter(it => it.ingId && num(it.cant) > 0).map(it => ({ ingId: it.ingId, cant: num(it.cant) }));
+    let nuevos = 0;
+    const items = [];
+    for (const it of r.items) {
+      const n = (it.nombre || '').trim();
+      if (!n || num(it.cant) <= 0) continue;
+      let i = ingPorNombre(n);
+      if (!i) {
+        i = { id: uid(), nombre: n.charAt(0).toUpperCase() + n.slice(1), cantidad: it.unidad === 'u' ? 1 : 1000, unidad: it.unidad || 'g', precio: 0 };
+        S.ingredientes.push(i);
+        nuevos++;
+      }
+      items.push({ ingId: i.id, cant: num(it.cant) });
+    }
+    if (r.items.some(it => (it.nombre || '').trim() && num(it.cant) <= 0)) { avisar('Poné cuánto usás de cada ingrediente'); return; }
+    r.items = items;
+    if (nuevos) setTimeout(() => avisar(`Sumé ${nuevos} producto${nuevos === 1 ? '' : 's'} al Súper: poneles el precio 🏪`), 50);
     r.rinde = num(r.rinde) || 1;
     r.precio = num(r.precio);
     if (r.id) Object.assign(receta(r.id), r); else S.recetas.push({ ...r, id: uid() });
@@ -1506,7 +1537,11 @@ document.addEventListener('input', e => {
   if (!recetaEdit || !el.dataset.rc) return;
   if (el.dataset.ri != null) recetaEdit.items[Number(el.dataset.ri)][el.dataset.rc] = el.value;
   else recetaEdit[el.dataset.rc] = el.value;
-  if (el.dataset.rc === 'ingId') pintarReceta(); else pintarTotalReceta();
+  if (el.dataset.rc === 'nombre' && el.dataset.ri != null) {
+    const k = Number(el.dataset.ri), celda = document.getElementById('u-' + k), u = celdaUnidad(recetaEdit.items[k], k);
+    if (celda && celda.dataset.tipo !== u.tipo) { celda.dataset.tipo = u.tipo; celda.innerHTML = u.html; }
+  }
+  pintarTotalReceta();
 });
 document.addEventListener('change', async e => {
   const el = e.target;
