@@ -1,4 +1,4 @@
-const CACHE = 'agenda-dulce-v14';
+const CACHE = 'agenda-dulce-v15';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icono-192.png', './icono-512.png', './apple-touch-icon.png', './icono.svg'];
 
 self.addEventListener('install', e => {

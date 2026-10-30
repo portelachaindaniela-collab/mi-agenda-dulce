@@ -136,6 +136,11 @@ a.btn.primario{color:var(--en-boton)}
 .stepper button{width:28px;height:28px;border-radius:9px;border:0;background:var(--inset);font-weight:800;cursor:pointer}
 .stepper span{min-width:20px;text-align:center;font-weight:800}
 .precio-in{width:80px;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--inset);text-align:right}
+.materias{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.materias .mat-item{display:flex;align-items:center;gap:8px;background:var(--inset);border-radius:12px;padding:7px 9px;cursor:pointer;min-width:0}
+.materias .mat-item .titulo{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.materias .mat-item .sub{font-size:12px}
+@media (min-width:900px){.materias{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .archivos{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
 .archivo{border:0;background:var(--inset);border-radius:13px;padding:0;overflow:hidden;cursor:pointer;text-align:left;display:flex;flex-direction:column;min-width:0}
 .archivo .vista{aspect-ratio:1;display:grid;place-items:center;font-size:34px;background:var(--line);position:relative}
@@ -202,6 +207,30 @@ body.mama .pestana{display:flex;flex-direction:column;align-items:center;gap:1px
 body.mama .pestana span:first-child{font-size:18px;line-height:1.1}
 body.mama .chat{flex:1;height:auto;min-height:0}
 body.mama .mama-cuerpo{flex:1;overflow-y:auto;min-height:0}
+/* notas: la hoja ocupa el alto que queda y scrollea por dentro */
+body.lleno #app{height:100dvh;display:flex;flex-direction:column}
+body.lleno .chat{flex:1;height:auto;min-height:0}
+.notas{flex:1;min-height:0;display:flex;gap:12px}
+.notas-lista{flex:1;min-height:0;overflow-y:auto;margin:0;display:flex;flex-direction:column}
+.notas-lista .filas{overflow-y:auto;min-height:0;flex:1}
+.notas-lista .fila.activa .titulo{color:var(--rosa)}
+.notas-lista .previa{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.editor{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--card);border-radius:18px;box-shadow:var(--sombra);overflow:hidden}
+.herramientas{display:flex;gap:4px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex:none}
+.herramientas::-webkit-scrollbar{display:none}
+@media (max-width:899px){.herramientas{flex-wrap:wrap;overflow:visible;gap:4px 3px}.herramientas button{min-width:32px;height:32px;padding:0 6px}.herramientas .sep,.herramientas .solo-compu{display:none}}
+.herramientas button{flex:none;border:0;background:var(--inset);border-radius:9px;min-width:34px;height:34px;padding:0 8px;cursor:pointer;font-size:15px;font-weight:800}
+.herramientas button.activo{background:var(--ink);color:var(--bg)}
+.herramientas .sep{flex:none;width:1px;height:22px;background:var(--line);margin:0 2px}
+.herramientas .color{width:22px;min-width:22px;height:22px;border-radius:50%;padding:0;box-shadow:0 0 0 2px var(--card),0 0 0 3px var(--line)}
+.hoja{flex:1;min-height:0;overflow-y:auto;padding:14px 16px 30px;outline:none;font-size:16px;line-height:1.55;overflow-wrap:anywhere}
+.hoja:empty::before{content:'Escribí lo que quieras…';color:var(--muted)}
+.hoja h2{font-size:21px;margin:.3em 0}
+.hoja ul,.hoja ol{padding-left:24px}
+.pie-nota{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);font-weight:700;flex:none}
+@media (min-width:900px){.solo-cel{display:none!important}}
+@media (max-width:899px){.solo-compu{display:none!important}}
+@media (max-width:899px){.notas.abierta .notas-lista{display:none}.notas:not(.abierta) .editor{display:none}}
 @media (max-width:380px){.cifra b{font-size:15px}.rapidos button{font-size:11.5px}nav.abajo button{font-size:10.5px}}
 
 /* compu */
@@ -225,6 +254,8 @@ body.mama .mama-cuerpo{flex:1;overflow-y:auto;min-height:0}
   .barra-acciones{max-width:520px}
   .cal button{height:62px;font-size:15px}
   .chat{height:calc(100vh - 150px)}
+  body.lleno #app{height:100vh}
+  .notas-lista{flex:none;width:280px}
   .msj{max-width:68%}
   #modal{align-items:center}
   .sheet{border-radius:22px;max-height:88vh}
@@ -289,7 +320,7 @@ function semilla() {
   return {
     nombre: 'Valentina', margen: 2.5, ejemplos: false, ocultarInstalar: false,
     materias, horario: { 1: [], 2: [], 3: [], 4: [], 5: [] },
-    tareas: [], examenes: [], eventos: [],
+    tareas: [], examenes: [], eventos: [], notas: [],
     ingredientes: [], recetas: [],
     lista: [], ventas: [], gastos: []
   };
@@ -312,6 +343,7 @@ if (S.ejemplos) {
   for (const [nombre, c] of faltan) S.materias.push({ id: uid(), nombre, color: COLORES[c][0], profe: '' });
   if (faltan.length) escribir(KEY, S);
 }
+S.notas = (S.notas || []).filter(n => /\S/.test((n.html || '').replace(/<[^>]*>|&nbsp;/g, '')));
 let timerSync;
 const guardarTodo = () => {
   escribir(KEY, S);
@@ -356,7 +388,7 @@ async function api(accion, datos = {}) {
   return j;
 }
 
-const ui = { mama: 'chat', vista: esMama() ? 'chat' : 'inicio', colegio: 'tareas', negocio: 'super', chat: 'dino', calMes: hoy().slice(0, 7), calDia: hoy(), finMes: hoy().slice(0, 7), verHechas: false, archMateria: '' };
+const ui = { mama: 'chat', vista: esMama() ? 'chat' : 'inicio', colegio: 'tareas', negocio: 'super', chat: 'dino', calMes: hoy().slice(0, 7), calDia: hoy(), finMes: hoy().slice(0, 7), verHechas: false, archMateria: '', nota: null };
 
 const materia = id => S.materias.find(m => m.id === id);
 const ingrediente = id => S.ingredientes.find(i => i.id === id);
@@ -1049,14 +1081,13 @@ function vistaColegio() {
       ${(S.horario[d] || []).map((id, k) => `<button class="mat" style="background:${colorMat(id)}" data-act="hor-quitar" data-d="${d}" data-k="${k}" title="Tocá para sacar">${esc(nombreMat(id))}</button>`).join('')}
       <button class="mas" data-act="hor-agregar" data-d="${d}" aria-label="Agregar materia">+</button></div>`).join('')}</div>
       <p class="sub" style="margin:6px 0 0">+ suma una materia al día. Tocá una materia para sacarla.</p></div>
-      <div class="tarjeta"><h2>Materias <button class="btn chico" data-act="nueva-materia">+ Materia</button></h2>
+      <div class="tarjeta"><h2>Materias <button class="btn chico" data-act="nueva-materia">+ Materia</button></h2><div class="materias">
       ${S.materias.map(m => {
         const prom = promedioMateria(m.id);
         const pend = S.tareas.filter(t => t.materiaId === m.id && !t.hecha).length;
-        return `<div class="fila tocable" data-act="materia-edit" data-id="${m.id}"><span class="punto" style="background:${m.color}"></span>
-          <div class="cuerpo"><div class="titulo">${esc(m.nombre)}</div><div class="sub">${m.profe ? esc(m.profe) + ' · ' : ''}${pend} tarea${pend === 1 ? '' : 's'} pendiente${pend === 1 ? '' : 's'}</div></div>
-          ${prom != null ? `<span class="chip ${prom >= 7 ? 'verde' : prom >= 4 ? 'ambar' : 'rojo'}">Prom. ${prom.toFixed(1).replace('.', ',')}</span>` : ''}</div>`;
-      }).join('') || '<p class="vacio">Agregá tus materias.</p>'}</div></div>`;
+        return `<div class="mat-item" data-act="materia-edit" data-id="${m.id}"><span class="punto" style="background:${m.color}"></span>
+          <div style="min-width:0;flex:1"><div class="titulo">${esc(m.nombre)}</div><div class="sub">${pend ? `${pend} pendiente${pend === 1 ? '' : 's'}` : 'Al día ✓'}${prom != null ? ` · <b style="color:var(--${prom >= 7 ? 'verde' : prom >= 4 ? 'ambar' : 'rojo'})">${prom.toFixed(1).replace('.', ',')}</b>` : ''}</div></div></div>`;
+      }).join('')}</div>${S.materias.length ? '' : '<p class="vacio">Agregá tus materias.</p>'}</div></div>`;
   }
   return html;
 }
@@ -1314,20 +1345,76 @@ function vistaMama(tab) {
 function vistaAjustes() {
   return `<div class="cards"><div class="tarjeta"><h2>Ajustes</h2>
     <label class="campo"><span>Tu nombre</span><input id="aj-nombre" value="${esc(S.nombre)}"></label>
-    <label class="campo"><span>Precio sugerido = costo ×</span><input id="aj-margen" type="number" inputmode="decimal" step="0.1" min="1" value="${S.margen}"></label>
-    <p class="ayuda">Con 2,5 un muffin que te cuesta $400 se sugiere a $1.000.</p>
+    <label class="campo"><span>Precio sugerido = costo × (con 2,5, un muffin de $400 se sugiere a $1.000)</span><input id="aj-margen" type="number" inputmode="decimal" step="0.1" min="1" value="${S.margen}"></label>
     <button class="btn primario" data-act="aj-guardar">Guardar</button></div>
     <div class="tarjeta"><h2>App en el celu o la compu</h2>${instalada() ? '<p class="vacio">✅ Ya está instalada.</p>' : tarjetaInstalar(true)}</div>
     ${fam.codigo ? `<div class="tarjeta"><h2>Chat con mamá y Dino</h2><p class="vacio">${chatOk === 'codigo' ? '⚠️ El link de conexión no es válido.' : '✅ Conectada.'}</p></div>` : tarjetaConectar()}
     ${fam.codigo ? `<div class="tarjeta"><h2>Avisos de Dino</h2>${avisosActivos() ? '<p class="vacio">✅ Activados: 14:10 y 19:00, y cuando mamá te escribe.</p><button class="btn chico" data-act="probar-avisos">Mandarme uno de prueba</button>' : tarjetaAvisos()}</div>` : ''}
-    <div class="tarjeta"><h2>Copia de seguridad</h2><p class="sub">Todo se guarda en este aparato. Bajate una copia de vez en cuando por si se borra (las fotos y archivos del cole no entran en la copia).</p>
-    <div class="botones"><button class="btn" data-act="exportar">⬇️ Bajar copia</button><label class="btn">⬆️ Cargar copia<input type="file" accept="application/json" id="importar" hidden></label></div></div>
-    <div class="tarjeta"><h2>Empezar de cero</h2><p class="sub">Borra todo lo que anotaste.</p><button class="btn peligro" data-act="borrar-todo">Borrar todo</button></div></div>`;
+    <div class="tarjeta"><h2>Copia de seguridad</h2><p class="sub" style="margin:0 0 8px">Todo se guarda en este aparato: bajate una copia de vez en cuando (las fotos y archivos del cole no entran).</p>
+    <div class="botones"><button class="btn chico" data-act="exportar">⬇️ Bajar copia</button><label class="btn chico">⬆️ Cargar copia<input type="file" accept="application/json" id="importar" hidden></label><button class="btn chico peligro" data-act="borrar-todo" style="margin-left:auto">🗑️ Borrar todo</button></div></div></div>`;
+}
+
+// Notas tipo Wordpad: se guardan como HTML en S.notas y solo en este aparato (no van a mamá).
+const textoNota = n => { const t = document.createElement('template'); t.innerHTML = (n.html || '').replace(/<(br|\/p|\/div|\/h2|\/li)>/gi, '$&\n'); return t.content.textContent; };
+const tituloNota = n => textoNota(n).split('\n').map(x => x.trim()).find(Boolean) || 'Nota sin título';
+function limpiarHtml(h) {
+  const t = document.createElement('template');
+  t.innerHTML = h || '';
+  t.content.querySelectorAll('script,style,iframe,object,embed,link,meta,img').forEach(x => x.remove());
+  t.content.querySelectorAll('*').forEach(x => [...x.attributes].forEach(a => { if (/^on/i.test(a.name) || /javascript:/i.test(a.value)) x.removeAttribute(a.name); }));
+  return t.innerHTML;
+}
+const HERRAMIENTAS = [
+  ['bold', '<b>B</b>', 'Negrita'], ['italic', '<i>I</i>', 'Cursiva'], ['underline', '<u>S</u>', 'Subrayado'], ['strikeThrough', '<s>T</s>', 'Tachado'], ['sep'],
+  ['titulo', 'T↑', 'Título'], ['insertUnorderedList', '•', 'Lista'], ['insertOrderedList', '1.', 'Lista numerada'], ['sep'],
+  ['justifyLeft', '⇤', 'Alinear a la izquierda'], ['justifyCenter', '↔', 'Centrar'], ['justifyRight', '⇥', 'Alinear a la derecha'], ['sep'],
+  ['c:#2b2230', '', 'Negro'], ['c:#d23f72', '', 'Rosa'], ['c:#4562d0', '', 'Azul'], ['c:#24865a', '', 'Verde'], ['c:#7c4fcc', '', 'Violeta'],
+  ['resaltar', '🖍️', 'Resaltar'], ['sep'], ['undo', '↶', 'Deshacer'], ['redo', '↷', 'Rehacer']
+];
+function vistaNotas() {
+  const notas = [...S.notas].sort((a, b) => b.mod - a.mod);
+  const n = ui.nota && buscar('notas', ui.nota);
+  if (!n) ui.nota = null;
+  const cuando = t => { const d = new Date(t); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : fechaCorta(d.toISOString().slice(0, 10)); };
+  const lista = `<div class="tarjeta notas-lista"><button class="btn primario ancho" data-act="nota-nueva" style="margin-bottom:8px">✏️ Nueva nota</button>
+    <div class="filas">${notas.map(x => `<div class="fila tocable ${x.id === ui.nota ? 'activa' : ''}" data-act="nota-abrir" data-id="${x.id}"><div class="cuerpo"><div class="titulo">${esc(tituloNota(x))}</div><div class="previa">${cuando(x.mod)} · ${esc(textoNota(x).replace(/\s+/g, ' ').trim().slice(0, 80))}</div></div></div>`).join('')
+      || '<p class="vacio">Acá podés escribir lo que quieras: resúmenes, ideas, cuentos… Tocá ✏️ Nueva nota.</p>'}</div></div>`;
+  const editor = n ? `<div class="editor"><div class="herramientas">
+      <button data-act="nota-cerrar" class="solo-cel" aria-label="Volver">←</button><span class="sep solo-cel"></span>
+      ${HERRAMIENTAS.map(([c, i, t]) => c === 'sep' ? '<span class="sep"></span>' : c.startsWith('justify') ? `<button class="solo-compu" data-fmt="${c}" title="${t}" aria-label="${t}">${i}</button>` : c.startsWith('c:') ? `<button class="color" data-fmt="${c}" title="${t}" aria-label="Letra ${t}" style="background:${c.slice(2)}"></button>` : `<button data-fmt="${c}" title="${t}" aria-label="${t}">${i}</button>`).join('')}</div>
+      <div class="hoja" id="hoja" contenteditable="true" spellcheck="true">${limpiarHtml(n.html)}</div>
+      <div class="pie-nota"><span id="nota-estado">Se guarda sola ✓</span><button class="btn chico peligro" data-act="nota-borrar">🗑️ Borrar</button></div></div>`
+    : '<div class="editor solo-compu" style="display:grid;place-items:center;color:var(--muted);font-weight:700">Elegí una nota o creá una nueva ✏️</div>';
+  return `<div class="notas ${n ? 'abierta' : ''}">${lista}${editor}</div>`;
+}
+let timerNota;
+function guardarNota() {
+  const n = ui.nota && buscar('notas', ui.nota), hoja = document.getElementById('hoja');
+  if (!n || !hoja) return;
+  n.html = limpiarHtml(hoja.innerHTML); n.mod = Date.now();
+  clearTimeout(timerNota);
+  timerNota = setTimeout(() => { escribir(KEY, S); const e = document.getElementById('nota-estado'); if (e) e.textContent = 'Se guarda sola ✓'; }, 400);
+  const e = document.getElementById('nota-estado'); if (e) e.textContent = 'Guardando…';
+  const fila = document.querySelector(`.notas-lista [data-id="${n.id}"] .titulo`); if (fila) fila.textContent = tituloNota(n);
+}
+// Al salir de una nota vacía, se borra sola para no dejar notas en blanco.
+function soltarNota() {
+  const n = ui.nota && buscar('notas', ui.nota);
+  if (n && !textoNota(n).trim()) S.notas = S.notas.filter(x => x !== n);
+  escribir(KEY, S);
+}
+function marcarHerramientas() {
+  document.querySelectorAll('[data-fmt]').forEach(b => {
+    const c = b.dataset.fmt;
+    let on = false;
+    try { on = c === 'titulo' ? /h2/i.test(document.queryCommandValue('formatBlock')) : !c.startsWith('c:') && !['undo', 'redo', 'resaltar'].includes(c) && document.queryCommandState(c); } catch (e) {}
+    b.classList.toggle('activo', on);
+  });
 }
 
 function pintarNav() {
   if (esMama()) { if (ui.mama !== 'chat') render(); return; }
-  const nav = [['inicio', '🏠', 'Inicio'], ['colegio', '🎒', 'Colegio'], ['calendario', '📅', 'Calendario'], ['negocio', '🧁', 'Negocio'], ['chat', '🦖', 'Dino y mamá']];
+  const nav = [['inicio', '🏠', 'Inicio'], ['colegio', '🎒', 'Colegio'], ['calendario', '📅', 'Calendario'], ['negocio', '🧁', 'Negocio'], ['notas', '📒', 'Notas'], ['chat', '🦖', 'Chat']];
   const n = noLeidos();
   document.getElementById('nav').innerHTML = nav.map(([k, i, l]) => `<button class="${ui.vista === k ? 'activa' : ''}" data-act="ir" data-v="${k}"><span>${i}</span>${l}${k === 'chat' && n ? `<b class="globo">${n}</b>` : ''}</button>`).join('');
 }
@@ -1353,6 +1440,7 @@ function render() {
     return;
   }
   document.body.classList.toggle('mama', esMama());
+  document.body.classList.toggle('lleno', !esMama() && (ui.vista === 'notas' || ui.vista === 'chat'));
   if (esMama()) {
     ui.vista = 'chat';
     const nom = esc(fam.nombre || 'Valentina');
@@ -1365,11 +1453,12 @@ function render() {
     if (ui.mama === 'novedades' && novSinLeer()) marcarNovedadesLeidas();
     return;
   }
-  const vistas = { inicio: vistaInicio, colegio: vistaColegio, calendario: vistaCalendario, negocio: vistaNegocio, chat: vistaChat, ajustes: vistaAjustes };
-  const titulos = { inicio: S.nombre ? 'Hola, ' + esc(S.nombre) + ' 👋' : 'Mi agenda', colegio: 'Colegio', calendario: 'Calendario', negocio: 'Mi emprendimiento', chat: ui.chat === 'dino' ? 'Dino' : 'Mamá', ajustes: 'Ajustes' };
+  const vistas = { inicio: vistaInicio, colegio: vistaColegio, calendario: vistaCalendario, negocio: vistaNegocio, notas: vistaNotas, chat: vistaChat, ajustes: vistaAjustes };
+  const titulos = { inicio: S.nombre ? 'Hola, ' + esc(S.nombre) + ' 👋' : 'Mi agenda', colegio: 'Colegio', calendario: 'Calendario', negocio: 'Mi emprendimiento', notas: 'Mis notas', chat: ui.chat === 'dino' ? 'Dino' : 'Mamá', ajustes: 'Ajustes' };
   document.getElementById('app').innerHTML = `<header><div><small>${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}</small><h1>${titulos[ui.vista]}</h1></div>
     <button class="icono" data-act="ir" data-v="${ui.vista === 'ajustes' ? 'inicio' : 'ajustes'}" aria-label="Ajustes">${ui.vista === 'ajustes' ? '✕' : '⚙️'}</button></header>${vistas[ui.vista]()}`;
   pintarNav();
+  if (ui.vista === 'notas' && ui.nota) { const h = document.getElementById('hoja'); if (h && !h.textContent.trim() && matchMedia('(pointer:fine)').matches) h.focus(); }
   if (ui.vista === 'chat') {
     pintarChat(true);
     if (ui.chat === 'mama' && noLeidos()) marcarLeidos();
@@ -1388,7 +1477,7 @@ function irADinoCon(texto, img) {
 /* ---------- eventos ---------- */
 const buscar = (lista, id) => S[lista].find(x => x.id === id);
 const acciones = {
-  'ir': el => { ui.vista = el.dataset.v; if (el.dataset.s) ui[el.dataset.v] = el.dataset.s; window.scrollTo(0, 0); render(); },
+  'ir': el => { if (ui.vista === 'notas' && el.dataset.v !== 'notas') { soltarNota(); ui.nota = null; } ui.vista = el.dataset.v; if (el.dataset.s) ui[el.dataset.v] = el.dataset.s; window.scrollTo(0, 0); render(); },
   'sub-colegio': el => { ui.colegio = el.dataset.s; render(); },
   'sub-negocio': el => { ui.negocio = el.dataset.s; render(); },
   'sub-chat': el => { ui.chat = el.dataset.s; render(); },
@@ -1511,6 +1600,10 @@ const acciones = {
   'ocultar-instalar': () => { S.ocultarInstalar = true; listo(); },
   'ocultar-banner': () => { escribir('agenda-dulce-sin-banner', true); render(); },
   'aj-guardar': () => { S.nombre = document.getElementById('aj-nombre').value.trim(); S.margen = num(document.getElementById('aj-margen').value) || 2.5; avisar('Guardado'); listo(); },
+  'nota-nueva': () => { soltarNota(); const n = { id: uid(), html: '', mod: Date.now() }; S.notas.push(n); ui.nota = n.id; render(); document.getElementById('hoja')?.focus(); },
+  'nota-abrir': el => { if (el.dataset.id === ui.nota) return; soltarNota(); ui.nota = el.dataset.id; render(); },
+  'nota-cerrar': () => { soltarNota(); ui.nota = null; render(); },
+  'nota-borrar': () => { const n = buscar('notas', ui.nota); if (n && (!textoNota(n).trim() || confirm('¿Borrar esta nota?'))) { S.notas = S.notas.filter(x => x !== n); ui.nota = null; escribir(KEY, S); render(); } },
   'exportar': () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
@@ -1534,8 +1627,27 @@ document.addEventListener('submit', e => {
   if (formActual.guardar(leerForm(e.target)) === false) return;
   cerrarModal(); listo();
 });
+// Los botones del editor actúan en pointerdown para no sacarle el foco (ni la selección) a la hoja.
+document.addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-fmt]');
+  if (!b) return;
+  e.preventDefault();
+  const hoja = document.getElementById('hoja');
+  if (document.activeElement !== hoja) hoja.focus();
+  const c = b.dataset.fmt;
+  if (c.startsWith('c:')) document.execCommand('foreColor', false, c.slice(2));
+  else if (c === 'titulo') document.execCommand('formatBlock', false, /h2/i.test(document.queryCommandValue('formatBlock')) ? 'div' : 'h2');
+  else if (c === 'resaltar') { const ya = /255,\s*2[0-9]{2},\s*1[0-9]{2}|#fff0a8/i.test(document.queryCommandValue('backColor')); document.execCommand('hiliteColor', false, ya ? 'transparent' : '#fff0a8'); }
+  else document.execCommand(c);
+  guardarNota(); marcarHerramientas();
+});
+document.addEventListener('selectionchange', () => { if (document.activeElement?.id === 'hoja') marcarHerramientas(); });
+document.addEventListener('paste', e => {
+  if (e.target.closest?.('#hoja')) { e.preventDefault(); document.execCommand('insertText', false, e.clipboardData.getData('text/plain')); }
+});
 document.addEventListener('input', e => {
   const el = e.target;
+  if (el.id === 'hoja') { guardarNota(); return; }
   if (el.id === 'chat-texto') { el.style.height = ''; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; return; }
   if (!recetaEdit || !el.dataset.rc) return;
   if (el.dataset.ri != null) recetaEdit.items[Number(el.dataset.ri)][el.dataset.rc] = el.value;
