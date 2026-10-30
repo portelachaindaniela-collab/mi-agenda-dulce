@@ -1317,7 +1317,6 @@ function vistaAjustes() {
     <label class="campo"><span>Precio sugerido = costo ×</span><input id="aj-margen" type="number" inputmode="decimal" step="0.1" min="1" value="${S.margen}"></label>
     <p class="ayuda">Con 2,5 un muffin que te cuesta $400 se sugiere a $1.000.</p>
     <button class="btn primario" data-act="aj-guardar">Guardar</button></div>
-    ${fam.codigo ? `<div class="tarjeta"><h2>¿Este celu es de mamá?</h2><p class="sub" style="margin:0 0 8px">Si tu mamá abrió la agenda en su celu y le aparece esto, pasala al modo mamá.</p><button class="btn chico" data-act="soy" data-q="mama" data-confirmar="1">👩 Pasar a modo mamá</button></div>` : ''}
     <div class="tarjeta"><h2>App en el celu o la compu</h2>${instalada() ? '<p class="vacio">✅ Ya está instalada.</p>' : tarjetaInstalar(true)}</div>
     ${fam.codigo ? `<div class="tarjeta"><h2>Chat con mamá y Dino</h2><p class="vacio">${chatOk === 'codigo' ? '⚠️ El link de conexión no es válido.' : '✅ Conectada.'}</p></div>` : tarjetaConectar()}
     ${fam.codigo ? `<div class="tarjeta"><h2>Avisos de Dino</h2>${avisosActivos() ? '<p class="vacio">✅ Activados: 14:10 y 19:00, y cuando mamá te escribe.</p><button class="btn chico" data-act="probar-avisos">Mandarme uno de prueba</button>' : tarjetaAvisos()}</div>` : ''}
