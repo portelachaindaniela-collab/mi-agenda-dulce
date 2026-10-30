@@ -284,7 +284,7 @@ const INGREDIENTES_EJEMPLO = { 'Harina 0000': 1200, 'Azúcar': 1300, 'Huevos': 3
 const RECETAS_EJEMPLO = ['Budín de limón', 'Muffins con chips'];
 
 function semilla() {
-  const materias = [['Matemática', 0], ['Lengua', 1], ['Inglés', 2], ['Historia', 3], ['Biología', 4], ['Físico-Química', 6], ['Geografía', 1], ['Formación Cristiana', 7], ['Ciudadanía', 3], ['Arte', 4], ['Ed. Física', 5]]
+  const materias = [['Matemática', 0], ['Lengua', 1], ['Inglés', 2], ['Historia', 3], ['Biología', 4], ['Físico-Química', 6], ['Geografía', 1], ['Formación Cristiana', 7], ['Ciudadanía', 3], ['Arte', 4], ['Teatro', 0], ['Ed. Física', 5]]
     .map(([nombre, c]) => ({ id: uid(), nombre, color: COLORES[c][0], profe: '' }));
   return {
     nombre: 'Valentina', margen: 2.5, ejemplos: false, ocultarInstalar: false,
@@ -308,7 +308,7 @@ if (S.ejemplos) {
   escribir(KEY, S);
 }
 { // materias que se sumaron después: se agregan a los datos que ya existen
-  const faltan = [['Físico-Química', 6], ['Geografía', 1], ['Formación Cristiana', 7], ['Ciudadanía', 3], ['Arte', 4]].filter(([n]) => !S.materias.some(m => sinTildes(m.nombre).includes(sinTildes(n))));
+  const faltan = [['Físico-Química', 6], ['Geografía', 1], ['Formación Cristiana', 7], ['Ciudadanía', 3], ['Arte', 4], ['Teatro', 0]].filter(([n]) => !S.materias.some(m => sinTildes(m.nombre).includes(sinTildes(n))));
   for (const [nombre, c] of faltan) S.materias.push({ id: uid(), nombre, color: COLORES[c][0], profe: '' });
   if (faltan.length) escribir(KEY, S);
 }
